@@ -1,0 +1,212 @@
+{% comment %} 
+Bixi availabilities
+
+Required data:
+- stations: a list of station objects
+    - station_id: int (the station's id number)
+    - show_bikes: bool (whether to show the number of available bikes)
+    - show_ebikes: bool (whether to show the number of available ebikes)
+    - show_docks: bool (whether to show the number of available docks)
+    - visualize: bool (show a visualization of the station's bikes/dock status)
+{% endcomment %}
+
+{% capture widgetId %}widget-bixi-{% uuid %}{% endcapture %}
+
+<ul id="{{widgetId}}" class="widget widget-bixi {{ bixi.extra_classes }}">
+</ul>
+
+<script>
+    initWidgetBixi(
+        document.getElementById("{{widgetId}}"),
+        {{ bixi.stations | json }}
+    );
+
+    {% unless bixi.is_subsequent_instance %}
+    async function initWidgetBixi(widget, stations) {
+        const statusUrl = "https://gbfs.velobixi.com/gbfs/2-2/en/station_status.json",
+              infoUrl = "https://gbfs.velobixi.com/gbfs/2-2/en/station_information.json",
+              alertUrl = "https://gbfs.velobixi.com/gbfs/2-2/en/system_alerts.json";
+
+        try {
+            const [statusResponse, infoResponse, alertResponse] = await Promise.all([
+                fetch(statusUrl),
+                fetch(infoUrl),
+                fetch(alertUrl)
+            ]);
+
+            if (!statusResponse.ok || !infoResponse.ok || !alertResponse.ok) {
+                throw new Error(`HTTP error: ${statusResponse.status}, ${infoResponse.status}, ${alertResponse.status}`);
+            }
+
+            const [statusJson, infoJson, alertJson] = await Promise.all([
+                statusResponse.json(),
+                infoResponse.json(),
+                alertResponse.json()
+            ]);
+
+            // show alerts
+
+            for (const station of stations) {
+                const stationInfo = infoJson.data.stations.find((s) => station.station_id == s.station_id);
+                const stationStatus = statusJson.data.stations.find((s) => station.station_id == s.station_id);
+                if (!stationInfo || !stationStatus) {
+                    console.error("Can't find station " + station.station_id);
+                    continue;
+                }
+                renderStation(station, stationStatus, stationInfo);
+            }
+
+
+        }
+        catch (error) {
+            console.error("Error fetching data", error);
+        }
+
+        function renderStation(stationConfig, status, info) {
+            console.log(status, info)
+            const name = info.name,
+                  capacity = info.capacity,
+                  currBikes = status.num_bikes_available - status.num_ebikes_available,
+                  currEBikes = status.num_ebikes_available,
+                  currBikesDisabled = status.num_bikes_disabled,
+                  currDocksAvail = status.num_docks_available,
+                  currDocksDisabled = status.num_docks_disabled;
+
+            const stationEl = document.createElement("li");
+            stationEl.classList.add("widget-bixi__station");
+            stationEl.innerHTML = `<span class="widget-bixi__station-name">${name}</span>`;
+
+            if (stationConfig.visualize) {
+                const stationVisEl = document.createElement("div");
+                stationVisEl.classList.add("widget-bixi__station-vis");
+                
+                const bikesEl = visualizationSegmentElem("bikes", currBikes, capacity),
+                      ebikesEl = visualizationSegmentElem("ebikes", currEBikes, capacity),
+                      docksEl = visualizationSegmentElem("docks", currDocksAvail, capacity),
+                      disabledEl = visualizationSegmentElem("disabled", currBikesDisabled + currDocksDisabled, capacity);
+
+                stationVisEl.appendChild(bikesEl);
+                stationVisEl.appendChild(ebikesEl);
+                stationVisEl.appendChild(docksEl);
+                stationVisEl.appendChild(disabledEl);
+
+                stationEl.appendChild(stationVisEl);
+            }
+
+            if (stationConfig.show_bikes || stationConfig.show_docks) {
+                const stationCountsEl = document.createElement("ul");
+                stationCountsEl.classList.add("widget-bixi__station-counters");
+
+                if (stationConfig.show_bikes) {
+                    const bikesEl = counterElem("bike", currBikes, "bikes available", "pedal_bike"),
+                        ebikesEl = counterElem("ebike", currEBikes, "e-bikes available", "electric_bike");
+
+                    stationCountsEl.appendChild(bikesEl);
+                    stationCountsEl.appendChild(ebikesEl);
+                }
+
+                if (stationConfig.show_docks) {
+                    const docksEl = counterElem("dock", currDocksAvail, "docks available", "bike_dock")
+                    stationCountsEl.appendChild(docksEl);
+                }
+
+                stationEl.appendChild(stationCountsEl);
+            }
+
+            widget.appendChild(stationEl);
+        }
+
+        function visualizationSegmentElem(type, count, capacity){
+            const el = document.createElement("span");
+            el.classList.add("widget-bixi__vis-segment");
+            el.dataset.type = type;
+            el.dataset.count = count;
+            console.log(Math.round((count / capacity) * 100));
+            el.style.width = `${Math.round((count / capacity) * 100)}%`;
+
+            return el;
+        }
+
+        function counterElem(type, count, labelText, icon) {
+            const el = document.createElement("li");
+            el.classList.add("widget-bixi__count");
+
+            el.dataset.count = count;
+            el.dataset.type = type;
+
+            el.innerHTML = `
+                <span class="widget-bixi__count-icon material-symbols-outlined">${icon}</span>
+                <span class="widget-bixi__count-num">${count}</span>
+                <span class="widget-bixi__count-label">${labelText}</span>
+            `;
+
+            return el;
+        }
+    }
+    {% endunless %}
+</script>
+
+{% unless bixi.is_subsequent_instance %}
+<style>
+    :where(.widget-bixi) {
+        --bixi-bikes: var(--color-blue);
+        --bixi-ebikes: var(--color-purple);
+        --bixi-docks: var(--color-gray);
+        --bixi-disabled: var(--color-red);
+        --bixi-occupied: var(--color-red);
+        --bixi-available: var(--color-green);
+        --bixi-low-num: var(--color-yellow);
+        --bixi-very-low-num: var(--color-orange);
+
+    }
+
+    /* :where(.widget-bixi__station) {
+        display: flex;
+        align-items: center;
+    } */
+
+    :where(.widget-bixi__station-vis) {
+        display: flex;
+        height: 1rem;
+        width: min(100%, 20em);
+    }
+
+    :where(.widget-bixi__vis-segment) {
+        height: 100%;
+
+        &:where([data-type="bikes"]) {
+            background-color: var(--bixi-bikes);
+        }
+
+        &:where([data-type="ebikes"]) {
+            background-color: var(--bixi-ebikes);
+        }
+
+        &:where([data-type="docks"]) {
+            background-color: var(--bixi-docks);
+        }
+
+        &:where([data-type="disabled"]) {
+            background-color: var(--bixi-disabled);
+        }
+    }
+
+    :where(.widget-bixi__count) {
+        color: var(--bixi-available);
+
+        &:where([data-count="0"]) {
+            color: var(--bixi-occupied);
+        }
+
+        &:where([data-count="1"]) {
+            color: var(--bixi-very-low-num);
+        }
+
+        &:where([data-count="2"]),
+        &:where([data-count="3"]) {
+            color: var(--bixi-low-num);
+        }
+    }
+    
+</style>
+{% endunless %}

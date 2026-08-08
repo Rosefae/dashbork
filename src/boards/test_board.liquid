@@ -8,6 +8,16 @@ widgets:
   time2:
     time_format: "dddd MMMM D"
     is_subsequent_instance: true
+  bixis:
+    stations:
+    - station_id: 303
+      show_bikes: true
+      show_docks: true
+      visualize: true
+    - station_id: 570
+      show_bikes: true
+      show_docks: true
+      visualize: true
 ---
 
 <style class="css-board">
@@ -36,3 +46,5 @@ widgets:
 
   {% include "time" with widgets.time2 %}
 </div>
+
+{% include "bixi" with widgets.bixis %}

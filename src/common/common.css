@@ -4,6 +4,14 @@
     --color-bg: #fff;
     --color-accent: var(--color-fg);
 
+    --color-red: #fa4d56;
+    --color-orange: #ff832b;
+    --color-yellow: #f1c21b;
+    --color-green: #42be65;
+    --color-blue: #4589ff;
+    --color-purple: #a56eff;
+    --color-gray: #8d8d8d;
+
     --fontface-body: sans-serif;
     --fontface-heading: var(--fontface-body);
     --fontface-accent: var(--fontface-body);
@@ -23,4 +31,12 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--fontface-heading);
+}
+
+.material-symbols-outlined {
+    font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24
 }
