@@ -1,104 +1,118 @@
-{% comment %} A Basic Time Widget {% endcomment %}
+{% comment %}
+A Basic Time Widget
+
+Required data:
+- time_format: String
+
+Date format key:
+- YYYY: full year (eg 2026)
+- YY: last 2 digits of year (eg 26)
+- MMMM: full month name (eg August)
+- MMM: abbreviated month name (eg Aug)
+- MM: 0-padded month number (eg 08)
+- M: non-0-padded month number (eg 8)
+- DD: 0-padded day of month (eg 07)
+- D: non-0-padded day of month (eg 7)
+- dddd: full day of week name (eg Saturday)
+- ddd: abbreviated day of week name (eg Sat)
+- dd: extra abbreviated day of week name (eg Sa)
+
+Time format key:
+- HH: 0-padded hour (24 hour) (eg 13)
+- H: non-0-padded hour (24 hour)
+- hh: 0-padded hour (12 hour) (eg 07)
+- h: non-0-padded hour (12 hour) (eg 7)
+- mm: minutes
+- pp: am or pm
+
+{% endcomment %}
 
 {% capture widgetId %}widget-time-{% uuid %}{% endcapture %}
 
-<div id="{{widgetId}}" class="widget widget-time">
-    <span class="widget-time__time"></span>
-    <span class="widget-time__date"></span>
+<div id="{{widgetId}}" class="widget widget-time {{ time.extra_classes }}">
 </div>
 
 <script>
-    if (typeof initWidgetTime !== "function"){
-        var initWidgetTime = (WIDGET, DATE_FORMAT, TIME_FORMAT) => {
-            const timeSpan = WIDGET.querySelector(".widget-time__time");
-            const dateSpan = WIDGET.querySelector(".widget-time__date");
-
-            const time = new Date();
-
-            const months = {
-                long: [
-                    "January",
-                    "February",
-                    "March",
-                    "April",
-                    "May",
-                    "June",
-                    "July",
-                    "August",
-                    "September",
-                    "October",
-                    "November",
-                    "December"
-                ],
-                short: [
-                    "Jan",
-                    "Feb",
-                    "Mar",
-                    "Apr",
-                    "May",
-                    "Jun",
-                    "Jul",
-                    "Aug",
-                    "Sep",
-                    "Oct",
-                    "Nov",
-                    "Dec"
-                ]
-            }
-
-            const daysOfWeek = {
-                long: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-                short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-                shorter: ["Su", "M", "T", "W", "Th", "F", "Sa"]
-            }
-
-            const formatDateMap = {
-                YYYY: time.getFullYear(),
-                YY: time.getFullYear() % 100,
-                MMMM: months.long[time.getMonth()],
-                MMM: months.short[time.getMonth()],
-                MM: String(time.getMonth() + 1).padStart(2, "0"),
-                M: String(time.getMonth() + 1),
-                DD: String(time.getDate()).padStart(2, "0"),
-                D: String(time.getDate()).padStart(2, "0"),
-                dddd: daysOfWeek.long[time.getDay()],
-                ddd: daysOfWeek.short[time.getDay()],
-                dd: daysOfWeek.shorter[time.getDay()]
-            }
-
-            const formatTimeMap = {
-                HH: String(time.getHours()).padStart(2, "0"),
-                H: time.getHours(),
-                hh: String(format12hour(time.getHours())).padStart(2, "0"),
-                h: format12hour(time.getHours()),
-                mm: String(time.getMinutes()).padStart(2, "0"),
-                pp: (time.getHours() >= 12 ? "pm" : "am")
-            }
-
-            if (DATE_FORMAT.length > 0) {
-                let d = DATE_FORMAT.replace(/Y{2}|Y{4}|M{1,4}|D{1,2}|d{2,4}/g,
-                    (matched) => formatDateMap[matched]);
-                dateSpan.innerText = d;
-            }
-
-            if (TIME_FORMAT.length > 0) {
-                let t = TIME_FORMAT.replace(/H{1,2}|h{1,2}|mm|pp/g, (matched) => formatTimeMap[matched]);
-                timeSpan.innerText = t;
-            }
-
-            function format12hour(hh) {
-                hh = hh % 12;
-                if (hh == 0) {
-                    hh = 12;
-                }
-                return hh;
-            }
-        }
-    }
-    
     initWidgetTime(
         document.getElementById("{{widgetId}}"),
-        "{{ time.date_format }}",
         "{{ time.time_format }}"
     );
+
+    {% unless time.is_subsequent_instance %}
+    function initWidgetTime(WIDGET, TIME_FORMAT) {
+        const time = new Date();
+
+        const months = {
+            long: [
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December"
+            ],
+            short: [
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec"
+            ]
+        }
+
+        const daysOfWeek = {
+            long: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+            short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+            shorter: ["Su", "M", "T", "W", "Th", "F", "Sa"]
+        }
+
+        const formatDateMap = {
+        }
+
+        const formatTimeMap = {
+            YYYY: time.getFullYear(),
+            YY: time.getFullYear() % 100,
+            MMMM: months.long[time.getMonth()],
+            MMM: months.short[time.getMonth()],
+            MM: String(time.getMonth() + 1).padStart(2, "0"),
+            M: String(time.getMonth() + 1),
+            DD: String(time.getDate()).padStart(2, "0"),
+            D: String(time.getDate()).padStart(2, "0"),
+            dddd: daysOfWeek.long[time.getDay()],
+            ddd: daysOfWeek.short[time.getDay()],
+            dd: daysOfWeek.shorter[time.getDay()],
+            
+            HH: String(time.getHours()).padStart(2, "0"),
+            H: time.getHours(),
+            hh: String(format12hour(time.getHours())).padStart(2, "0"),
+            h: format12hour(time.getHours()),
+            mm: String(time.getMinutes()).padStart(2, "0"),
+            pp: (time.getHours() >= 12 ? "pm" : "am")
+        }
+
+        let t = TIME_FORMAT.replace(/Y{2}|Y{4}|M{1,4}|D{1,2}|d{2,4}|H{1,2}|h{1,2}|mm|pp/g, (matched) => formatTimeMap[matched]);
+        WIDGET.innerHTML = t;
+
+        function format12hour(hh) {
+            hh = hh % 12;
+            if (hh == 0) {
+                hh = 12;
+            }
+            return hh;
+        }
+    }
+    {% endunless %}
 </script>
