@@ -23,7 +23,7 @@ export default async function (eleventyConfig) {
     return {
         dir: {
             input: "src",
-            output: "dist",
+            output: "pages",
             includes: "widgets",
             layouts: "common"
         },
