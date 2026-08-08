@@ -12,8 +12,9 @@ Required data:
 
 {% capture widgetId %}widget-bixi-{% uuid %}{% endcapture %}
 
-<ul id="{{widgetId}}" class="widget widget-bixi {{ bixi.extra_classes }}">
-</ul>
+<div id="{{widgetId}}" class="widget widget-bixi {{ bixi.extra_classes }}">
+    <ul class="widget-bixi__stations"></ul>
+</div>
 
 <script>
     initWidgetBixi(
@@ -26,6 +27,8 @@ Required data:
         const statusUrl = "https://gbfs.velobixi.com/gbfs/2-2/en/station_status.json",
               infoUrl = "https://gbfs.velobixi.com/gbfs/2-2/en/station_information.json",
               alertUrl = "https://gbfs.velobixi.com/gbfs/2-2/en/system_alerts.json";
+
+        const stationsEl = widget.querySelector(".widget-bixi__stations");
 
         try {
             const [statusResponse, infoResponse, alertResponse] = await Promise.all([
@@ -45,6 +48,21 @@ Required data:
             ]);
 
             // show alerts
+            const alertLastUpdated = alertJson.last_updated;
+            const activeAlerts = alertJson.data.alerts.filter((a) => {
+                for (const time of a.times) {
+                    if (time.start < alertLastUpdated && (time.end > alertLastUpdated || !time.end)) return true;
+                }
+                return false;
+            });
+
+            for (const alert of activeAlerts) {
+                const alertEl = document.createElement("div");
+                alertEl.classList.add("widget-bixi__alert");
+                alertEl.innerText = alert.description;
+
+                widget.appendChild(alertEl);
+            }
 
             for (const station of stations) {
                 const stationInfo = infoJson.data.stations.find((s) => station.station_id == s.station_id);
@@ -56,14 +74,12 @@ Required data:
                 renderStation(station, stationStatus, stationInfo);
             }
 
-
         }
         catch (error) {
             console.error("Error fetching data", error);
         }
 
         function renderStation(stationConfig, status, info) {
-            console.log(status, info)
             const name = info.name,
                   capacity = info.capacity,
                   currBikes = status.num_bikes_available - status.num_ebikes_available,
@@ -112,8 +128,7 @@ Required data:
 
                 stationEl.appendChild(stationCountsEl);
             }
-
-            widget.appendChild(stationEl);
+            stationsEl.appendChild(stationEl);
         }
 
         function visualizationSegmentElem(type, count, capacity){
@@ -121,7 +136,6 @@ Required data:
             el.classList.add("widget-bixi__vis-segment");
             el.dataset.type = type;
             el.dataset.count = count;
-            console.log(Math.round((count / capacity) * 100));
             el.style.width = `${Math.round((count / capacity) * 100)}%`;
 
             return el;
@@ -159,11 +173,6 @@ Required data:
         --bixi-very-low-num: var(--color-orange);
 
     }
-
-    /* :where(.widget-bixi__station) {
-        display: flex;
-        align-items: center;
-    } */
 
     :where(.widget-bixi__station-vis) {
         display: flex;
