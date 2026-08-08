@@ -17,25 +17,86 @@
 
         const time = new Date();
 
-        const formatMap = {
+        const months = {
+            long: [
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December"
+            ],
+            short: [
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec"
+            ]
+        }
+
+        const daysOfWeek = {
+            long: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+            short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+            shorter: ["Su", "M", "T", "W", "Th", "F", "Sa"]
+        }
+
+        const formatDateMap = {
             YYYY: time.getFullYear(),
+            YY: time.getFullYear() % 100,
+            MMMM: months.long[time.getMonth()],
+            MMM: months.short[time.getMonth()],
             MM: String(time.getMonth() + 1).padStart(2, "0"),
+            M: String(time.getMonth() + 1),
             DD: String(time.getDate()).padStart(2, "0"),
+            D: String(time.getDate()).padStart(2, "0"),
+            dddd: daysOfWeek.long[time.getDay()], 
+            ddd: daysOfWeek.short[time.getDay()], 
+            dd: daysOfWeek.shorter[time.getDay()]
+        }
+
+        const formatTimeMap = {
             HH: String(time.getHours()).padStart(2, "0"),
-            mm: String(time.getMinutes()).padStart(2, "0")
+            H: time.getHours(),
+            hh: String(format12hour(time.getHours())).padStart(2, "0"),
+            h: format12hour(time.getHours()),
+            mm: String(time.getMinutes()).padStart(2, "0"),
+            pp: (time.getHours() >= 12 ? "pm" : "am")
         }
 
         console.log(DATE_FORMAT);
 
         if (DATE_FORMAT.length > 0) {
-            let d = DATE_FORMAT.replace(/YYYY|MM|DD|HH|mm/g, (matched) => formatMap[matched]);
+            let d = DATE_FORMAT.replace(/Y{2}|Y{4}|M{1,4}|D{1,2}|d{2,4}/g, 
+                (matched) => formatDateMap[matched]);
             dateSpan.innerText = d;
             console.log("asdf");
         }
 
         if (TIME_FORMAT.length > 0) {
-            let t = TIME_FORMAT.replace(/YYYY|MM|DD|HH|mm/g, (matched) => formatMap[matched]);
+            let t = TIME_FORMAT.replace(/H{1,2}|h{1,2}|mm|pp/g, (matched) => formatTimeMap[matched]);
             timeSpan.innerText = t;
+        }
+
+        function format12hour(hh) {
+            hh = hh % 12;
+            if (hh == 0) {
+                hh = 12;
+            }
+            return hh;
         }
     })();
 </script>
