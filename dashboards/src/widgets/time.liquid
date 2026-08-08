@@ -1,0 +1,41 @@
+{% comment %} A Basic Time Widget {% endcomment %}
+
+<div id="widget-time" class="widget-time">
+    <span class="widget-time__time"></span>
+    <span class="widget-time__date"></span>
+</div>
+
+<script>
+    (() => {
+        const DATE_FORMAT = "{{ time.date_format }}";
+        const TIME_FORMAT = "{{ time.time_format }}";
+        
+        const WIDGET = document.getElementById("widget-time");
+        
+        const timeSpan = WIDGET.querySelector(".widget-time__time");
+        const dateSpan = WIDGET.querySelector(".widget-time__date");
+
+        const time = new Date();
+
+        const formatMap = {
+            YYYY: time.getFullYear(),
+            MM: String(time.getMonth() + 1).padStart(2, "0"),
+            DD: String(time.getDate()).padStart(2, "0"),
+            HH: String(time.getHours()).padStart(2, "0"),
+            mm: String(time.getMinutes()).padStart(2, "0")
+        }
+
+        console.log(DATE_FORMAT);
+
+        if (DATE_FORMAT.length > 0) {
+            let d = DATE_FORMAT.replace(/YYYY|MM|DD|HH|mm/g, (matched) => formatMap[matched]);
+            dateSpan.innerText = d;
+            console.log("asdf");
+        }
+
+        if (TIME_FORMAT.length > 0) {
+            let t = TIME_FORMAT.replace(/YYYY|MM|DD|HH|mm/g, (matched) => formatMap[matched]);
+            timeSpan.innerText = t;
+        }
+    })();
+</script>

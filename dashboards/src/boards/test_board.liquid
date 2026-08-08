@@ -1,0 +1,12 @@
+---
+title: Test Board
+theme: basic
+widgets:
+  time:
+    time_format: "HH:mm"
+    date_format: "MM-DD"
+---
+
+<h1>{{ title }}</h1>
+
+{% include "time" with widgets.time %}

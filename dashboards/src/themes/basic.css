@@ -1,0 +1,12 @@
+@font-face {
+    font-family: "Roboto";
+    src: url("../common/fonts/roboto.ttf");
+}
+
+:root {
+    --color-fg: #000;
+    --color-bg: #fff;
+
+    --fontface-body: "Roboto", sans-serif;
+    --fontface-heading: var(--fontface-body);
+}
