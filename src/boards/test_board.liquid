@@ -9,6 +9,16 @@ widgets:
     date_format: "dddd MMMM D"
 ---
 
+<style>
+  body {
+    background-image: url("../common/images/gudetama.png");
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-position: bottom right;
+    background-size: contain;
+  }
+</style>
+
 <h1>{{ title }}</h1>
 
 {% include "time" with widgets.time %}

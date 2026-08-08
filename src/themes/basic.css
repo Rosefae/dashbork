@@ -10,3 +10,8 @@
     --fontface-body: "Roboto", sans-serif;
     --fontface-heading: var(--fontface-body);
 }
+
+body {
+    padding: 1em;
+    text-align: center;
+}

@@ -13,13 +13,14 @@ export default async function (eleventyConfig) {
     // Copy assets
 
     eleventyConfig.addPassthroughCopy("src/common/fonts");
+    eleventyConfig.addPassthroughCopy("src/common/images");
     eleventyConfig.addPassthroughCopy("src/**/*.css"); // todo: minify
     eleventyConfig.addPassthroughCopy("src/**/*.js"); // todo: minify;
 
     // Global page settings
 
     eleventyConfig.addGlobalData("layout", "wrapper.liquid");
-    
+
     eleventyConfig.addGlobalData("permalink", () => {
         return (data) => `${data.page.filePathStem}.${data.page.outputFileExtension}`;
     });
