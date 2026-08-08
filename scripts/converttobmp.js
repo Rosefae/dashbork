@@ -15,6 +15,7 @@ const bmpPath = path.resolve(import.meta.dirname, `../renders/${dashboard}.bmp`)
 
 const image = await Jimp.read(pngPath);
 
-// todo: grayscale and dither?
+image.greyscale();
+image.dither();
 
 await image.write(bmpPath);

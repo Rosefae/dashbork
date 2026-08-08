@@ -12,10 +12,8 @@ const dashboard = args[0];
 const vwidth = parseInt(args[1]);
 const vheight = parseInt(args[2]);
 
-const pagePath = path.resolve(import.meta.dirname, `../pages/boards/${dashboard}/index.html`);
+const pagePath = path.resolve(import.meta.dirname, `../pages/boards/${dashboard}.html`);
 const screenshotPath = path.resolve(import.meta.dirname, `../renders/${dashboard}.png`);
-
-console.log(pagePath);
 
 const browser = await puppeteer.launch();
 const page = await browser.newPage();

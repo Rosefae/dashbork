@@ -16,9 +16,15 @@ export default async function (eleventyConfig) {
     eleventyConfig.addPassthroughCopy("src/**/*.css"); // todo: minify
     eleventyConfig.addPassthroughCopy("src/**/*.js"); // todo: minify;
 
-    // Set wrapper
+    // Global page settings
 
     eleventyConfig.addGlobalData("layout", "wrapper.liquid");
+    
+    eleventyConfig.addGlobalData("permalink", () => {
+        return (data) => `${data.page.filePathStem}.${data.page.outputFileExtension}`;
+    });
+    
+    // TODO: pull things like api keys from an untracked secrets.json somewhere, process and add to data cascade
 
     // Custom shortcodes
 
