@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+
 export default async function (eleventyConfig) {
     // const { RenderPlugin } = await import("@11ty/eleventy");
     // eleventyConfig.addPlugin(RenderPlugin, {
@@ -17,6 +19,12 @@ export default async function (eleventyConfig) {
     // Set wrapper
 
     eleventyConfig.addGlobalData("layout", "wrapper.liquid");
+
+    // Custom shortcodes
+
+    eleventyConfig.addShortcode("uuid", () => {
+        return crypto.randomUUID();
+    });
 
     // Eleventy settings
 

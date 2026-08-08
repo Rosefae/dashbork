@@ -5,8 +5,12 @@ widgets:
   time:
     time_format: "hh:mm pp"
     date_format: "ddd MMM DD"
+  time2:
+    date_format: "dddd MMMM D"
 ---
 
 <h1>{{ title }}</h1>
 
 {% include "time" with widgets.time %}
+
+{% include "time" with widgets.time2 %}

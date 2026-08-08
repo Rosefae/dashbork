@@ -5,7 +5,22 @@ A system of dashboards that I'm probably gonna overthink and overengineer
 
 Through NPM, all things are possible
 
-## TODO
+## Future work
 
-- Clean CSS
-- Minify JS
+### 11ty
+
+- Add postprocessing to move all style tags to head (order: widget, then board)
+- When more than one instance of widget is on the board, somehow avoid unnecessary duplication of JS and styles?
+- Add postprocessing to clean/minify the html/css/js
+
+### Widgets to add
+
+- Weather
+- Bus & Metro schedule
+- Bixi status
+- Todoist integration
+- Pull events from calendar(s)
+
+### Other
+
+Puppeteer can screenshot an element instead of the whole page so possible I can do something with that
