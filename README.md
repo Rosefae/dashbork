@@ -15,7 +15,6 @@ Through NPM, all things are possible
 
 ### Widgets to add
 
-- Weather
 - Bus & Metro schedule
 - Todoist integration
 - Pull events from calendar(s)
