@@ -17,9 +17,10 @@ Through NPM, all things are possible
 
 - Weather
 - Bus & Metro schedule
-- Bixi status
 - Todoist integration
 - Pull events from calendar(s)
+
+Also update data pulls to first check local storage to see if it's been updated recently to gate most API requests to 1/minute (mostly so pupeteer uses to same data to generate the screenshots for all dashboards/devices)
 
 ### Other
 

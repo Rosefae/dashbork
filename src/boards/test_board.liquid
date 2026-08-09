@@ -18,6 +18,9 @@ widgets:
       show_bikes: true
       show_docks: true
       visualize: true
+  weather:
+    latitude: 45.46
+    longitude: -73.57
 ---
 
 <style class="css-board">
@@ -47,4 +50,6 @@ widgets:
   {% include "time" with widgets.time2 %}
 </div>
 
-{% include "bixi" with widgets.bixis %}
+{% comment %} {% include "bixi" with widgets.bixis %} {% endcomment %}
+
+{% include "weather" with widgets.weather %}
