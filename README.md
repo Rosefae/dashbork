@@ -3,7 +3,7 @@ A system of dashboards that I'm probably gonna overthink and overengineer
 
 ## Requirements
 
-Through NPM, all things are possible
+Through NPM, all things are possible (version 26+ because Temporal)
 
 ## Future work
 

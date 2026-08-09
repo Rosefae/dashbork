@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npx @11ty/eleventy",
-    "serve": "npx @11ty/eleventy --serve",
+    "watch": "node scripts/watch.js",
+    "serve": "node scripts/server.js",
+    "serveDev": "concurrently -k -c green.dim,cyan.dim -s first \"npm:watch\" \"npm:serve\"",
     "x3-test": "node scripts/screenshot.js test_board 528 792 && node scripts/converttobmp.js test_board"
   },
   "keywords": [],
@@ -15,6 +17,8 @@
   "type": "module",
   "dependencies": {
     "@11ty/eleventy": "^3.1.6",
+    "concurrently": "^10.0.4",
+    "express": "^5.2.1",
     "jimp": "^1.6.1",
     "puppeteer": "^25.5.0"
   }

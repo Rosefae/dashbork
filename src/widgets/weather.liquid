@@ -21,138 +21,11 @@ Required data:
         {{ weather.longitude }}
     )
     {% unless weather.is_subsequent_instance %}
-        var weatherCodeMap = {
-            "0": {
-                "description": "Sunny",
-                "icon": "sunny",
-                "night": {
-                    "description": "Clear",
-                    "icon": "bedtime"
-                }
-            },
-            "1": {
-                "description": "Mainly Sunny",
-                "icon": "sunny",
-                "night": {
-                    "description": "Mainly Clear",
-                    "icon": "bedtime"
-                }
-            },
-            "2": {
-                "description": "Partly Cloudy",
-                "icon": "partly_cloudy_day",
-                "night": {
-                    "description": "Partly Cloudy",
-                    "icon": "partly_cloudy_night"
-                }
-            },
-            "3": {
-                "description": "Cloudy",
-                "icon": "cloud"
-            },
-            "45": {
-                "description": "Foggy",
-                "icon": "foggy"
-            },
-            "48": {
-                "description": "Rime Fog",
-                "icon": "foggy"
-            },
-            "51": {
-                "description": "Light Drizzle",
-                "icon": "rainy"
-            },
-            "53": {
-                "description": "Drizzle",
-                "icon": "rainy"
-            },
-            "55": {
-                "description": "Heavy Drizzle",
-                "icon": "rainy"
-            },
-            "56": {
-                "description": "Light Freezing Drizzle",
-                "icon": "weather_mix"
-            },
-            "57": {
-                "description": "Freezing Drizzle",
-                "icon": "weather_mix"
-            },
-            "61": {
-                "description": "Light Rain",
-                "icon": "rainy"
-            },
-            "63": {
-                "description": "Rain",
-                "icon": "rainy"
-            },
-            "65": {
-                "description": "Heavy Rain",
-                "icon": "rainy"
-            },
-            "66": {
-                "description": "Light Freezing Rain",
-                "icon": "weather_mix"
-            },
-            "67": {
-                "description": "Freezing Rain",
-                "icon": "weather_mix"
-            },
-            "71": {
-                "description": "Light Snow",
-                "icon": "weather_snowy"
-            },
-            "73": {
-                "description": "Snow",
-                "icon": "weather_snowy"
-            },
-            "75": {
-                "description": "Heavy Snow",
-                "icon": "weather_snowy"
-            },
-            "77": {
-                "description": "Snow Grains",
-                "icon": "weather_snowy"
-            },
-            "80": {
-                "description": "Light Showers",
-                "icon": "rainy"
-            },
-            "81": {
-                "description": "Showers",
-                "icon": "rainy"
-            },
-            "82": {
-                "description": "Heavy Showers",
-                "icon": "rainy"
-            },
-            "85": {
-                "description": "Light Snow Showers",
-                "icon": "weather_mix"
-            },
-            "86": {
-                "description": "Snow Showers",
-                "icon": "weather_mix"
-            },
-            "95": {
-                "description": "Thunderstorm",
-                "icon": "thunderstorm"
-            },
-            "96": {
-                "description": "Light Thunderstorms With Hail",
-                "icon": "thunderstorm"
-            },
-            "99": {
-                "description": "Thunderstorm With Hail",
-                "icon": "thunderstorm"
-            }
-        }
-
         async function initWidgetWeather(widget, latitude, longitude) {
-            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_probability_max,weather_code,uv_index_max&current=surface_pressure,temperature_2m,apparent_temperature,weather_code,is_day&timezone=America%2FNew_York&forecast_days=1`;
+            // const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_probability_max,weather_code,uv_index_max&current=surface_pressure,temperature_2m,apparent_temperature,weather_code,is_day&timezone=America%2FNew_York&forecast_days=1`;
 
             try {
-                const response = await fetch(apiUrl);
+                const response = await fetch("/data/weather");
 
                 if (!response.ok) {
                     throw new Error(`HTTP error: ${response.status}`);
@@ -161,93 +34,88 @@ Required data:
                 const data = await response.json();
 
                 renderCurrentWeather(data.current, data.current_units);
-                renderDayWeather(data.daily, data.daily_units, 0);
+                for (const dailyData of data.daily) {
+                    renderDayWeather(dailyData);
+                }
             } catch (error) {
                 console.error("Error featching weather data", error);
             }
 
-            function renderCurrentWeather(data, units) {
-                let weatherType = weatherCodeMap[data.weather_code];
-                if (data.is_day == 0 && weatherType.night !== undefined) {
-                    weatherType = weatherType.night;
-                }
-
+            function renderCurrentWeather(data) {
                 const currentWeatherEl = document.createElement("div");
                 currentWeatherEl.classList.add("widget-weather__current");
 
                 currentWeatherEl.innerHTML = `
                     <div class="widget-weather__type">
-                        <span class="widget-weather__icon material-symbols-outlined">${weatherType.icon}</span>
-                        <span class="widget-weather__description">${weatherType.description}</span>
+                        <span class="widget-weather__icon material-symbols-outlined">${data.weatherType.icon}</span>
+                        <span class="widget-weather__description">${data.weatherType.description}</span>
                     </div>
 
                     <div class="widget-weather__temperature">
-                        <span class="widget-weather__temperature-num">${data.temperature_2m}</span>
-                        <span class="widget-weather__temperature-unit">${units.temperature_2m}</span>
+                        <span class="widget-weather__temperature-num">${data.temp}</span>
+                        <span class="widget-weather__temperature-unit">${data.tempUnit}</span>
                     </div>
 
                     <div class="widget-weather__feels-like">
                         <span class="widget-weather__temperature-label">Feels like</span>
-                        <span class="widget-weather__temperature-num">${data.apparent_temperature}</span>
-                        <span class="widget-weather__temperature-unit">${units.apparent_temperature}</span>
+                        <span class="widget-weather__temperature-num">${data.feelsLike}</span>
+                        <span class="widget-weather__temperature-unit">${data.tempUnit}</span>
                     </div>
 
                     <div class="widget-weather__pressure">
-                        <span class="widget-weather__pressure-num">${data.surface_pressure}</span>
-                        <span class="widget-weather__pressure-unit">${units.surface_pressure}</span>
+                        <span class="widget-weather__pressure-num">${data.pressure}</span>
+                        <span class="widget-weather__pressure-unit">${data.pressureUnit}</span>
                     </div>
                 `
 
                 widget.appendChild(currentWeatherEl);
             }
 
-            function renderDayWeather(data, units, dayIndex) {
-                let weatherType = weatherCodeMap[data.weather_code[dayIndex]];
-
+            function renderDayWeather(data) {
                 const dayWeatherEl = document.createElement("div");
                 dayWeatherEl.classList.add("widget-weather__day");
 
-                if (dayIndex == 0) {
+                if (data.label == "Today") {
                     dayWeatherEl.classList.add("widget-weather__day--today");
-                    dayWeatherEl.innerHTML = "<span class='widget-weather__day-label'>Today</span>";
                 }
+                dayWeatherEl.innerHTML = `<span class='widget-weather__day-label'>${data.label}</span>`;
 
                 dayWeatherEl.innerHTML += `
                     <div class="widget-weather__type">
-                        <span class="widget-weather__icon material-symbols-outlined">${weatherType.icon}</span>
-                        <span class="widget-weather__description">${weatherType.description}</span>
+                        <span class="widget-weather__icon material-symbols-outlined">${data.weatherType.icon}</span>
+                        <span class="widget-weather__description">${data.weatherType.description}</span>
                     </div>
 
                     <div class="widget-weather__temperature">
                         <span class="widget-weather__temperature-min">
-                            <span class="widget-weather__temperature-num">${data.temperature_2m_min[dayIndex]}</span>
-                            <span class="widget-weather__temperature-unit">${units.temperature_2m_min}</span>
+                            <span class="widget-weather__temperature-num">${data.tempMin}</span>
+                            <span class="widget-weather__temperature-unit">${data.tempUnit}</span>
                         </span> –
                         <span class="widget-weather__temperature-max">
-                            <span class="widget-weather__temperature-num">${data.temperature_2m_max[dayIndex]}</span>
-                            <span class="widget-weather__temperature-unit">${units.temperature_2m_max}</span>
+                            <span class="widget-weather__temperature-num">${data.tempMax}</span>
+                            <span class="widget-weather__temperature-unit">${data.tempUnit}</span>
                         </span>
                     </div>
 
                     <div class="widget-weather__feels-like">
                         <span class="widget-weather__temperature-label">Feels like</span>
                         <span class="widget-weather__temperature-min">
-                            <span class="widget-weather__temperature-num">${data.apparent_temperature_min[dayIndex]}</span>
-                            <span class="widget-weather__temperature-unit">${units.apparent_temperature_min}</span>
+                            <span class="widget-weather__temperature-num">${data.feelsLikeMin}</span>
+                            <span class="widget-weather__temperature-unit">${data.tempUnit}</span>
                         </span> –
                         <span class="widget-weather__temperature-max">
-                            <span class="widget-weather__temperature-num">${data.apparent_temperature_max[dayIndex]}</span>
-                            <span class="widget-weather__temperature-unit">${units.apparent_temperature_max}</span>
+                            <span class="widget-weather__temperature-num">${data.feelsLikeMax}</span>
+                            <span class="widget-weather__temperature-unit">${data.tempUnit}</span>
                         </span>
                     </div>
 
                     <div class="widget-weather__pop">
-                        <span class="widget-weather__pop-num">${data.precipitation_probability_max[dayIndex]}%</span>
+                        <span class="widget-weather__pop-num">${data.pop}%</span>
                         <span class="widget-weather__pop-label">chance of precipitation</span>
                     </div>
 
                     <div class="widget-weather__uv">
-                        <span class="widget-weather__uv-num">${data.uv_index_max[dayIndex]}</span>
+                        <span class="widget-weather__uv-num">${data.uv}</span>
                         <span class="widget-weather__uv-label">UV index</span>
                     </div>
                 `
