@@ -240,7 +240,6 @@ function getWeatherType(weatherCode, isNight = false) {
 }
 
 export async function getData(params) {
-    console.log(params);
     const newDataFunction = async () => {
         const apiParams = formatAPIParams(params.latitude, params.longitude);
         return await fetchNewData(apiParams);

@@ -4,12 +4,16 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { exec } from "node:child_process";
 
-const WATCH_DIR = path.join(process.cwd(), "./src");
 const TRIGGER_COMMAND = "npm run build";
 
 console.log("Watching for changes...");
 
-fs.watch(WATCH_DIR, { recursive: true }, (eventType, filename) => {
+const thingsToWatch = [
+    path.join(process.cwd(), "./src"),
+    path.join(process.cwd(), ".eleventy.js")
+]
+
+const doOnWatch = (eventType, filename) => {
     if (!filename) return;
 
     console.log(`File changed: ${filename}`);
@@ -25,4 +29,8 @@ fs.watch(WATCH_DIR, { recursive: true }, (eventType, filename) => {
         }
         console.log(stdout);
     });
-});
+}
+
+for (const thing of thingsToWatch) {
+    fs.watch(thing, { recursive: true }, doOnWatch);
+}

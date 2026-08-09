@@ -1,6 +1,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+import * as constants from "./constants.js";
+
 /**
  * Returns cached data, or if it's stale, returns new data and caches it
  * @param {string} cachePathString - path to the cache file, relative to project root
@@ -46,3 +48,4 @@ export async function handleCachedData(cachePathString, millisecondsUntilStale, 
 
     return newData;
 }
+

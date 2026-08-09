@@ -23,6 +23,7 @@ Through NPM, all things are possible (version 26+ because Temporal)
 - Data caching doesn't properly account for if there's multiple instances of a widget with different options / params / data needs
     - For Bixi: pull new data if querying a station not in cached data
     - For Weather: store `{lastFetched, data}` object under a `latitude,longitude` key, and update each such pair separately (will need boolean flag for whether to modify or overwrite json object)
+- update screenshot script to match new architecture
 
 ### Other
 
