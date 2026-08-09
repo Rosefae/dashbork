@@ -21,6 +21,12 @@ Through NPM, all things are possible (version 26+ because Temporal)
 
 Also update data pulls to first check local storage to see if it's been updated recently to gate most API requests to 1/minute (mostly so pupeteer uses to same data to generate the screenshots for all dashboards/devices)
 
+### Bugfixes
+
+- Data caching doesn't properly account for if there's multiple instances of a widget with different options / params / data needs
+    - For Bixi: pull new data if querying a station not in cached data
+    - For Weather: store `{lastFetched, data}` object under a `latitude,longitude` key, and update each such pair separately (will need boolean flag for whether to modify or overwrite json object)
+
 ### Other
 
 Puppeteer can screenshot an element instead of the whole page so possible I can do something with that

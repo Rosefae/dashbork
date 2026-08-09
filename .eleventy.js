@@ -25,12 +25,18 @@ export default async function (eleventyConfig) {
         return (data) => `${data.page.filePathStem}.${data.page.outputFileExtension}`;
     });
     
-    // TODO: pull things like api keys from an untracked secrets.json somewhere, process and add to data cascade
-
-    // Custom shortcodes
+    // Custom shortcodes and filters
 
     eleventyConfig.addShortcode("uuid", () => {
         return crypto.randomUUID();
+    });
+
+    eleventyConfig.addFilter("boolean", (value) => {
+        if (value == 0) return false;
+        if (value == undefined) return false;
+        if (value == "") return false;
+
+        return true;
     });
 
     // Eleventy settings

@@ -21,6 +21,7 @@ widgets:
   weather:
     latitude: 45.46
     longitude: -73.57
+    showCurrent: true
 ---
 
 <style class="css-board">
@@ -52,6 +53,6 @@ widgets:
   {% include "time" with widgets.time2 %}
 </div>
 
-{% include "bixi" with widgets.bixis %}
+{% comment %} {% include "bixi" with widgets.bixis %} {% endcomment %}
 
-{% comment %} {% include "weather" with widgets.weather %} {% endcomment %}
+{% include "weather" with widgets.weather %}

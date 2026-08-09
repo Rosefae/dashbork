@@ -14,7 +14,6 @@ app.use(express.static(STATIC_PATH));
 
 app.get('/data/weather', async (req, res) => {
     const data = await getWeatherData(req.query);
-
     res.send(data);
 });
 

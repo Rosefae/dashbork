@@ -31,7 +31,6 @@ Required data:
 
         try {
             const queryString = params.toString();
-            console.log(queryString);
             const response = await fetch(`/data/bixi?${queryString}`);
 
             if (!response.ok) {

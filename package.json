@@ -8,7 +8,7 @@
     "build": "npx @11ty/eleventy",
     "watch": "node scripts/watch.js",
     "serve": "node scripts/server.js",
-    "serveDev": "concurrently -k -c green.dim,cyan.dim -s first \"npm:watch\" \"npm:serve\"",
+    "serveDev": "npm run build && concurrently -k -c green.dim,cyan.dim -s first \"npm:watch\" \"npm:serve\"",
     "x3-test": "node scripts/screenshot.js test_board 528 792 && node scripts/converttobmp.js test_board"
   },
   "keywords": [],

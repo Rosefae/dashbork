@@ -132,16 +132,14 @@ const WEATHER_CODE_MAP = {
     }
 }
 
-function formatAPIParams(latitude, longitude, current, today) {
+function formatAPIParams(latitude, longitude) {
     let params = `latitude=${latitude}&longitude=${longitude}`;
 
-    if (current) {
-        params += "&current=temperature_2m,apparent_temperature,is_day,weather_code,surface_pressure";
-    }
+    // current weather
+    params += "&current=temperature_2m,apparent_temperature,is_day,weather_code,surface_pressure";
 
-    if (today) {
-        params += "&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_max,precipitation_probability_max";
-    }
+    // daily forcast
+    params += "&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_max,precipitation_probability_max";
 
     params += "&timezone=auto&forecast_days=1";
     // potential room to extend forecast days later
@@ -242,8 +240,9 @@ function getWeatherType(weatherCode, isNight = false) {
 }
 
 export async function getData(params) {
+    console.log(params);
     const newDataFunction = async () => {
-        const apiParams = formatAPIParams(params.latitude, params.longitude, params.current, params.today);
+        const apiParams = formatAPIParams(params.latitude, params.longitude);
         return await fetchNewData(apiParams);
     }
     return await utils.handleCachedData(CACHE_PATH, MILLISECONDS_UNTIL_STALE, newDataFunction);

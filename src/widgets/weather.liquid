@@ -6,6 +6,10 @@ Data from openmeteo.
 Required data:
 - latitude
 - longitude
+
+Other:
+- showCurrent (bool)
+- showToday (bool)
 {% endcomment %}
 
 {% capture widgetId %}widget-weather-{% uuid %}{% endcapture %}
@@ -18,19 +22,20 @@ Required data:
     initWidgetWeather(
         document.getElementById("{{widgetId}}"),
         {{ weather.latitude }},
-        {{ weather.longitude }}
+        {{ weather.longitude }},
+        {{ weather.showCurrent | boolean }},
+        {{ weather.showToday | boolean }}
     )
+
     {% unless weather.is_subsequent_instance %}
-        async function initWidgetWeather(widget, latitude, longitude) {
+        async function initWidgetWeather(widget, latitude, longitude, showCurrent, showToday) {
             
             try {
                 const queryString = new URLSearchParams({
                     latitude: latitude,
-                    longitude: longitude,
-                    current: true,
-                    today: true
+                    longitude: longitude
                 }).toString();
-                const response = await fetch("/data/weather");
+                const response = await fetch(`/data/weather?${queryString}`);
 
                 if (!response.ok) {
                     throw new Error(`HTTP error: ${response.status}`);
@@ -38,9 +43,11 @@ Required data:
 
                 const data = await response.json();
 
-                renderCurrentWeather(data.current, data.current_units);
-                for (const dailyData of data.daily) {
-                    renderDayWeather(dailyData);
+                if (data.current && showCurrent) renderCurrentWeather(data.current, data.current_units);
+                if (showToday) {
+                    for (const dailyData of data.daily) {
+                        renderDayWeather(dailyData);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching weather data", error);
