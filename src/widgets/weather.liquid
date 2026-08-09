@@ -22,8 +22,7 @@ Required data:
     )
     {% unless weather.is_subsequent_instance %}
         async function initWidgetWeather(widget, latitude, longitude) {
-            // const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_probability_max,weather_code,uv_index_max&current=surface_pressure,temperature_2m,apparent_temperature,weather_code,is_day&timezone=America%2FNew_York&forecast_days=1`;
-
+            
             try {
                 const response = await fetch("/data/weather");
 
@@ -38,7 +37,7 @@ Required data:
                     renderDayWeather(dailyData);
                 }
             } catch (error) {
-                console.error("Error featching weather data", error);
+                console.error("Error fetching weather data", error);
             }
 
             function renderCurrentWeather(data) {

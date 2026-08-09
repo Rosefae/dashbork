@@ -24,82 +24,62 @@ Required data:
 
     {% unless bixi.is_subsequent_instance %}
     async function initWidgetBixi(widget, stations) {
-        const statusUrl = "https://gbfs.velobixi.com/gbfs/2-2/en/station_status.json",
-              infoUrl = "https://gbfs.velobixi.com/gbfs/2-2/en/station_information.json",
-              alertUrl = "https://gbfs.velobixi.com/gbfs/2-2/en/system_alerts.json";
-
-        const stationsEl = widget.querySelector(".widget-bixi__stations");
-
         try {
-            const [statusResponse, infoResponse, alertResponse] = await Promise.all([
-                fetch(statusUrl),
-                fetch(infoUrl),
-                fetch(alertUrl)
-            ]);
+            const response = await fetch("/data/bixi");
 
-            if (!statusResponse.ok || !infoResponse.ok || !alertResponse.ok) {
-                throw new Error(`HTTP error: ${statusResponse.status}, ${infoResponse.status}, ${alertResponse.status}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
             }
 
-            const [statusJson, infoJson, alertJson] = await Promise.all([
-                statusResponse.json(),
-                infoResponse.json(),
-                alertResponse.json()
-            ]);
+            const data = await response.json();
+            console.log(data);
 
-            // show alerts
-            const alertLastUpdated = alertJson.last_updated;
-            const activeAlerts = alertJson.data.alerts.filter((a) => {
-                for (const time of a.times) {
-                    if (time.start < alertLastUpdated && (time.end > alertLastUpdated || !time.end)) return true;
-                }
-                return false;
-            });
+            renderAlerts(data.alerts);
+            renderStations(data.stations);
+        } catch (error) {
+            console.error("Error fetching bixi data", error);
+        }
 
-            for (const alert of activeAlerts) {
+        function renderAlerts(alerts) {
+            if (!alerts) return;
+
+            for (const alert of alerts) {
                 const alertEl = document.createElement("div");
                 alertEl.classList.add("widget-bixi__alert");
                 alertEl.innerText = alert.description;
 
                 widget.appendChild(alertEl);
             }
+        }
 
+        function renderStations(stationsData) {
             for (const station of stations) {
-                const stationInfo = infoJson.data.stations.find((s) => station.station_id == s.station_id);
-                const stationStatus = statusJson.data.stations.find((s) => station.station_id == s.station_id);
-                if (!stationInfo || !stationStatus) {
-                    console.error("Can't find station " + station.station_id);
-                    continue;
-                }
-                renderStation(station, stationStatus, stationInfo);
+                renderStation(station, stationsData[station.station_id]);
             }
-
-        }
-        catch (error) {
-            console.error("Error fetching bixi data", error);
         }
 
-        function renderStation(stationConfig, status, info) {
-            const name = info.name,
-                  capacity = info.capacity,
-                  currBikes = status.num_bikes_available - status.num_ebikes_available,
-                  currEBikes = status.num_ebikes_available,
-                  currBikesDisabled = status.num_bikes_disabled,
-                  currDocksAvail = status.num_docks_available,
-                  currDocksDisabled = status.num_docks_disabled;
+        function renderStation(stationConfig, stationData) {
+            const stationsEl = widget.querySelector(".widget-bixi__stations");
+            const name = stationData.name,
+                  capacity = stationData.capacity,
+                  bikesAvail = stationData.bikesAvail,
+                  ebikesAvail = stationData.ebikesAvail,
+                  bikesDisabled = stationData.bikesDisabled,
+                  docksAvail = stationData.docksAvail,
+                  docksDisabled = stationData.docksDisabled;
 
             const stationEl = document.createElement("li");
             stationEl.classList.add("widget-bixi__station");
-            stationEl.innerHTML = `<span class="widget-bixi__station-name">${name}</span>`;
+            stationEl.innerHTML = `<span class="widget-bixi__station-name">${stationData.name}</span>`;
 
             if (stationConfig.visualize) {
                 const stationVisEl = document.createElement("div");
                 stationVisEl.classList.add("widget-bixi__station-vis");
                 
-                const bikesEl = visualizationSegmentElem("bikes", currBikes, capacity),
-                      ebikesEl = visualizationSegmentElem("ebikes", currEBikes, capacity),
-                      docksEl = visualizationSegmentElem("docks", currDocksAvail, capacity),
-                      disabledEl = visualizationSegmentElem("disabled", currBikesDisabled + currDocksDisabled, capacity);
+                const bikesEl = visualizationSegmentElem("bikes", stationData.bikesAvail, stationData.capacity),
+                      ebikesEl = visualizationSegmentElem("ebikes", stationData.ebikesAvail, stationData.capacity),
+                      docksEl = visualizationSegmentElem("docks", stationData.docksAvail, stationData.capacity),
+                      disabledEl = visualizationSegmentElem("disabled", stationData.bikesDisabled + stationData.docksDisabled, stationData.capacity);
 
                 stationVisEl.appendChild(bikesEl);
                 stationVisEl.appendChild(ebikesEl);
@@ -114,15 +94,15 @@ Required data:
                 stationCountsEl.classList.add("widget-bixi__station-counters");
 
                 if (stationConfig.show_bikes) {
-                    const bikesEl = counterElem("bike", currBikes, "bikes available", "pedal_bike"),
-                        ebikesEl = counterElem("ebike", currEBikes, "e-bikes available", "electric_bike");
+                    const bikesEl = counterElem("bike", stationData.bikesAvail, "bikes available", "pedal_bike"),
+                        ebikesEl = counterElem("ebike", stationData.ebikesAvail, "e-bikes available", "electric_bike");
 
                     stationCountsEl.appendChild(bikesEl);
                     stationCountsEl.appendChild(ebikesEl);
                 }
 
                 if (stationConfig.show_docks) {
-                    const docksEl = counterElem("dock", currDocksAvail, "docks available", "bike_dock")
+                    const docksEl = counterElem("dock", stationData.docksAvail, "docks available", "bike_dock")
                     stationCountsEl.appendChild(docksEl);
                 }
 
