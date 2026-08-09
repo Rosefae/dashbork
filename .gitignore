@@ -1,3 +1,5 @@
 node_modules
 pages
 renders
+scripts/data/cached
+secrets.json

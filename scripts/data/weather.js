@@ -1,4 +1,10 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
+
 const API_URL = "https://api.open-meteo.com/v1/forecast";
+const CACHE_PATH = path.join(process.cwd(), "./scripts/data/cached/weather.json");
+
+const MILLISECONDS_BEFORE_UPDATING_DATA = 5*60*1000; // 5 minutes
 
 const WEATHER_CODE_MAP = {
     "0": {
@@ -145,6 +151,7 @@ function formatAPIParams(latitude, longitude, current, today) {
 }
 
 async function fetchNewData(params) {
+    console.log("Fetching new weather data");
     const fetchUrl = API_URL + "?" + params;
 
     let result = {};
@@ -166,11 +173,11 @@ async function fetchNewData(params) {
             result["daily"] = formatDailyWeatherData(data.daily, data.daily_units);
         }
 
-    } catch (error) {
-        console.error("Error featching weather data", error);
-    }
+        return result;
 
-    return result;
+    } catch (error) {
+        console.error("Error fetching weather data", error);
+    }
 }
 
 function formatCurrentWeatherData(data, units) {
@@ -200,6 +207,7 @@ function formatDailyWeatherData(data, units) {
             uv: data.uv_index_max[i],
             pop: data.precipitation_probability_max[i],
             tempUnit: units.temperature_2m_max,
+            date: data.time[i],
             label: getDayLabel(data.time[i])
         }
 
@@ -235,8 +243,38 @@ function getWeatherType(weatherCode, isNight = false) {
 }
 
 export async function getData(params) {
-    const apiParams = formatAPIParams(params.latitude, params.longitude, params.current, params.today);
+    // attempt to get cached data first
+    let cachedData = {};
+    try {
+        const raw = await fs.promises.readFile(CACHE_PATH);
+        const cachedData = JSON.parse(raw);
+        if (!cachedData.data) throw new Error("Could not find data in cached file");
+        if (!cachedData.lastFetched) throw new Error("Could not find last fetched time");
 
-    return await fetchNewData(apiParams);
-    // cache data and only fetch new data if it's been a few mintues
+        if (Temporal.Now.instant().epochMilliseconds - cachedData.lastFetched < MILLISECONDS_BEFORE_UPDATING_DATA) {
+            // Cached data sufficiently fresh
+            console.log("Serving cached weather data");
+            return cachedData.data;
+        }
+    } catch (error) {
+        console.error("Error reading cached data", error);
+    }
+
+    // fetch new data as cached data was not returned
+    const apiParams = formatAPIParams(params.latitude, params.longitude, params.current, params.today);
+    const newTime = Temporal.Now.instant().epochMilliseconds;
+    const newData = await fetchNewData(apiParams);
+
+    // write new data to cache
+    try {
+        const dataString = JSON.stringify({
+            lastFetched: newTime,
+            data: newData
+        });
+        await fs.promises.writeFile(CACHE_PATH, dataString);
+    } catch (error) {
+        console.error("Error storing data into cache", error);
+    }
+
+    return newData;
 }
