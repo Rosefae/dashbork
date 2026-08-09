@@ -13,21 +13,13 @@ const app = express();
 app.use(express.static(STATIC_PATH));
 
 app.get('/data/weather', async (req, res) => {
-    // Todo: get params from req
-    const params = {
-        latitude: 45.46,
-        longitude: -73.57,
-        current: true,
-        today: true
-    }
-    const data = await getWeatherData(params);
+    const data = await getWeatherData(req.query);
 
     res.send(data);
 });
 
 app.get('/data/bixi', async (req, res) => {
-    // Todo get station ids from req
-    const stationIds = [303, 570, 428, 671];
+    const stationIds = req.query.stationIds;
     const data = await getBixiData(stationIds);
     
     res.send(data);

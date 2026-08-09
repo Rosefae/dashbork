@@ -24,8 +24,15 @@ Required data:
 
     {% unless bixi.is_subsequent_instance %}
     async function initWidgetBixi(widget, stations) {
+        const params = new URLSearchParams();
+        for (const station of stations) {
+            params.append("stationIds", station.station_id);
+        }
+
         try {
-            const response = await fetch("/data/bixi");
+            const queryString = params.toString();
+            console.log(queryString);
+            const response = await fetch(`/data/bixi?${queryString}`);
 
             if (!response.ok) {
                 throw new Error(`HTTP error: ${response.status}`);

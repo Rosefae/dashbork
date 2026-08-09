@@ -24,6 +24,12 @@ Required data:
         async function initWidgetWeather(widget, latitude, longitude) {
             
             try {
+                const queryString = new URLSearchParams({
+                    latitude: latitude,
+                    longitude: longitude,
+                    current: true,
+                    today: true
+                }).toString();
                 const response = await fetch("/data/weather");
 
                 if (!response.ok) {
