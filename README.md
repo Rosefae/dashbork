@@ -5,6 +5,37 @@ A system of dashboards that I'm probably gonna overthink and overengineer
 
 Through NPM, all things are possible (version 26+ because Temporal)
 
+## Node scripts
+
+- `build`: builds the front-end (triggers an 11ty build)
+- `watch`: watch for changes to 11ty files, then rebuild (no live reload)
+- `serve`: spins up server
+- `serveDev`: `build`, then concurrently `watch` and `serve`
+
+## File Structure
+
+```
+|-- src (11ty source files for front-end)
+  |-- common (assets shared by all boards/widgets)
+    |-- fonts
+    |-- images
+    |-- common.css
+    |-- wrapper.liquid
+  |-- themes (theme-specific css)
+    |-- {theme name}.css
+  |-- boards (the main files for each dashboard)
+    |-- {board name}.liquid (can be any extension that 11ty can handle)
+  |-- widgets (different widgets that can be included as partials on different dashboards)
+    |-- {widget name}.liquid
+|-- scripts (server-side scripts)
+  |-- data (scripts for the middle data layer to fetch data from various sources)
+  |-- constants.js
+  |-- utils.js
+  |-- renderImage.js
+  |-- server.js
+  |-- watch.js (used to trigger a rebuild of the front-end during development)
+```
+
 ## Future work
 
 ### 11ty
