@@ -1,5 +1,5 @@
 node_modules
 pages
 renders
-scripts/data/cached
+cached_data
 .env
