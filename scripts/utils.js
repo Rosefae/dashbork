@@ -11,11 +11,9 @@ import * as constants from "./constants.js";
  * @returns {object} data to be fetched
  */
 export async function handleCachedData(cachePathString, millisecondsUntilStale, getNewDataFunction) {
-    const cachePath = path.join(process.cwd(), cachePathString);
+    const cachePath = path.join(constants.DATACACHE_ABS_PATH, cachePathString);
 
     // attempt to get cached data first
-    let cachedData = {}
-
     try {
         console.log(`Attempting to get data from ${cachePathString}`);
         const raw = await fs.promises.readFile(cachePath);
@@ -45,7 +43,7 @@ export async function handleCachedData(cachePathString, millisecondsUntilStale, 
             lastFetched: newTime,
             data: newData
         });
-        await fs.promises.writeFile(cachePath, dataString);
+        await writeFileAndMakeDir(cachePath, dataString);
         console.log("New data cached");
     } catch (error) {
         console.error("Error storing data into cache", error);
@@ -54,3 +52,17 @@ export async function handleCachedData(cachePathString, millisecondsUntilStale, 
     return newData;
 }
 
+/**
+ * Writes the file and creates all directories in path, if it doesn't already exist
+ * @param {string or path} filePath 
+ * @param {*} data 
+ */
+export async function writeFileAndMakeDir(filePath, data) {
+    try {
+        const dir = path.dirname(filePath);
+        await fs.promises.mkdir(dir, { recursive: true });
+        await fs.promises.writeFile(filePath, data);
+    } catch (error) {
+        console.error("Error writing file", error);
+    }
+}

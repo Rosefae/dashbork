@@ -18,11 +18,6 @@ Through NPM, all things are possible (version 26+ because Temporal)
 - Todoist integration
 - Pull events from calendar(s)
 
-### Bugfixes
-
-- Data caching doesn't properly account for if there's multiple instances of a widget with different options / params / data needs
-    - For weather, store each long/lat query in a separate file
-
 ### Other
 
 - Puppeteer can screenshot an element instead of the whole page so possible I can do something with that

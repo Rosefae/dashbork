@@ -1,10 +1,9 @@
+import * as constants from "../constants.js";
 import * as utils from "../utils.js";
 
 const STATUS_URL = "https://gbfs.velobixi.com/gbfs/2-2/en/station_status.json",
     INFO_URL = "https://gbfs.velobixi.com/gbfs/2-2/en/station_information.json",
     ALERTS_URL = "https://gbfs.velobixi.com/gbfs/2-2/en/system_alerts.json";
-
-const CACHE_PATH = "./scripts/data/cached/bixi.json";
 
 const MILLISECONDS_UNTIL_STALE = 60 * 1000; // 1 minute
 
@@ -88,11 +87,9 @@ export async function getData(stationIds) {
 
     console.log("Getting Bixi data...");
 
-    const newDataFunction = async () => {
+    const data = await utils.handleCachedData("bixi.json", MILLISECONDS_UNTIL_STALE, async () => {
         return await fetchNewData(stationIds);
-    }
-
-    const data = await utils.handleCachedData(CACHE_PATH, MILLISECONDS_UNTIL_STALE, newDataFunction);
+    });
 
     return processData(stationIds, data);
 }

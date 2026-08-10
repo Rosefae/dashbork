@@ -15,3 +15,6 @@ export const DASHBOARDS_PUBLIC_URL = PUBLIC_BASE_URL + DASHBOARDS_REL_URL;
 export const RENDERS_REL_URL = "/renders";
 export const RENDERS_LOCAL_URL = LOCAL_BASE_URL + RENDERS_REL_URL;
 export const RENDERS_PUBLIC_URL = PUBLIC_BASE_URL + RENDERS_REL_URL;
+
+export const DATACACHE_REL_PATH = "./scripts/data/cached";
+export const DATACACHE_ABS_PATH = path.join(process.cwd(), DATACACHE_REL_PATH);

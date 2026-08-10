@@ -1,7 +1,7 @@
+import * as constants from "../constants.js";
 import * as utils from "../utils.js";
 
 const API_URL = "https://api.open-meteo.com/v1/forecast";
-const CACHE_PATH = "./scripts/data/cached/weather.json";
 
 const MILLISECONDS_UNTIL_STALE = 5*60*1000; // 5 minutes
 
@@ -151,8 +151,6 @@ async function fetchNewData(queryString) {
     console.log(`Fetching new weather data with query string: ${queryString}`);
     const fetchUrl = API_URL + "?" + queryString;
 
-    let result = {};
-
     try {
         const response = await fetch(fetchUrl);
 
@@ -163,19 +161,24 @@ async function fetchNewData(queryString) {
         console.log("Weather data recieved. Parsing...");
         const data = await response.json();
 
-        if (data.current) {
-            result["current"] = formatCurrentWeatherData(data.current, data.current_units);
-        }
-
-        if (data.daily) {
-            result["daily"] = formatDailyWeatherData(data.daily, data.daily_units);
-        }
-
-        return result;
+        return data;
 
     } catch (error) {
         console.error("Error fetching weather data", error);
     }
+}
+
+function processData(data) {
+    let processed = {};
+    if (data.current) {
+        processed["current"] = formatCurrentWeatherData(data.current, data.current_units);
+    }
+
+    if (data.daily) {
+        processed["daily"] = formatDailyWeatherData(data.daily, data.daily_units);
+    }
+
+    return processed;
 }
 
 function formatCurrentWeatherData(data, units) {
@@ -245,9 +248,11 @@ export async function getData(params) {
 
     console.log("Getting weather data...");
 
-    const newDataFunction = async () => {
+    const dataCachePath = `weather/lat${params.latitude}long${params.longitude}.json`;
+    const data = await utils.handleCachedData(dataCachePath, MILLISECONDS_UNTIL_STALE, async () => {
         const apiQueryString = formatAPIQueryString(params.latitude, params.longitude);
         return await fetchNewData(apiQueryString);
-    }
-    return await utils.handleCachedData(CACHE_PATH, MILLISECONDS_UNTIL_STALE, newDataFunction);
+    });
+
+    return processData(data);
 }
