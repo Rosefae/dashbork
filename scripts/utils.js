@@ -17,6 +17,7 @@ export async function handleCachedData(cachePathString, millisecondsUntilStale, 
     let cachedData = {}
 
     try {
+        console.log(`Attempting to get data from ${cachePathString}`);
         const raw = await fs.promises.readFile(cachePath);
         const cachedData = JSON.parse(raw);
         if (!cachedData.data) throw new Error("Could not find data in cached file");
@@ -27,21 +28,25 @@ export async function handleCachedData(cachePathString, millisecondsUntilStale, 
             console.log("Serving cached data");
             return cachedData.data;
         }
+        console.log("Cached data too old");
     } catch (error) {
         console.error("Error reading cached data", error);
     }
 
     // fetch new data as cached data was not returned
     const newTime = Temporal.Now.instant().epochMilliseconds;
+    console.log("Fetching new data instead...");
     const newData = await getNewDataFunction();
 
     // write new data to cache
     try {
+        console.log("Writing new data to cache file...");
         const dataString = JSON.stringify({
             lastFetched: newTime,
             data: newData
         });
         await fs.promises.writeFile(cachePath, dataString);
+        console.log("New data cached");
     } catch (error) {
         console.error("Error storing data into cache", error);
     }

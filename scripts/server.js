@@ -20,30 +20,43 @@ app.use(express.static(PAGES_PATH));
 app.use(constants.RENDERS_REL_URL, express.static(RENDERS_PATH));
 
 app.get('/data/weather', async (req, res) => {
-    const data = await getWeatherData(req.query);
-    res.send(data);
+    try {
+        const data = await getWeatherData(req.query);
+        res.json(data);
+    } catch (error) {
+        res.status(400).json(error);
+    }
 });
 
 app.get('/data/bixi', async (req, res) => {
-    const stationIds = req.query.stationIds;
-    const data = await getBixiData(stationIds);
-    
-    res.send(data);
+    try {
+        const stationIds = req.query.stationIds;
+        const data = await getBixiData(stationIds);
+
+        res.json(data);
+    } catch (error) {
+        res.status(400).json(error);
+    }
 });
 
 // api/setup and api/display must mimic trmnl servers
 // https://docs.trmnl.com/go/diy/byod-s
 
 app.get('/api/display', async (req, res) => {
-    const dashboard = req.query.dashboard,
-        width = parseInt(req.query.width),
-        height = parseInt(req.query.height),
-        isGrayscale = req.query.isGrayscale === "true",
-        imgFormat = req.query.format || "png";
-    
-    const screenshot = await renderImage(dashboard, width, height, isGrayscale, imgFormat);
+    try {
+        const dashboard = req.query.dashboard,
+            width = parseInt(req.query.width),
+            height = parseInt(req.query.height),
+            isGrayscale = req.query.isGrayscale === "true",
+            imgFormat = req.query.format || "png";
 
-    res.json({ img_url: screenshot.publicUrl });
+        const screenshot = await renderImage(dashboard, width, height, isGrayscale, imgFormat);
+        
+        res.json({ img_url: screenshot.publicUrl });
+    } catch (error) {
+        res.status(400).json(error);
+    }
+
 });
 
 app.listen(PORT, () => {

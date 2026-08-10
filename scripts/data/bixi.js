@@ -24,6 +24,7 @@ async function fetchNewData(stationIds) {
             throw new Error(`HTTP error: ${statusResponse.status}, ${infoResponse.status}, ${alertResponse.status}`);
         }
 
+        console.log("Bixi data received. Parsing...");
         const [statusJson, infoJson, alertJson] = await Promise.all([
             statusResponse.json(),
             infoResponse.json(),
@@ -77,6 +78,10 @@ function formatStationData(status, info) {
 }
 
 export async function getData(stationIds) {
+    if (stationIds.length <= 0) throw new Error("Must request at least one bixi station");
+
+    console.log("Getting Bixi data...");
+
     const newDataFunction = async () => {
         return await fetchNewData(stationIds);
     }
