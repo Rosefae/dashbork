@@ -2,7 +2,7 @@ import * as utils from "../utils.js";
 
 const STATUS_URL = "https://gbfs.velobixi.com/gbfs/2-2/en/station_status.json",
     INFO_URL = "https://gbfs.velobixi.com/gbfs/2-2/en/station_information.json",
-    ALERT_URL = "https://gbfs.velobixi.com/gbfs/2-2/en/system_alerts.json";
+    ALERTS_URL = "https://gbfs.velobixi.com/gbfs/2-2/en/system_alerts.json";
 
 const CACHE_PATH = "./scripts/data/cached/bixi.json";
 
@@ -12,55 +12,61 @@ async function fetchNewData(stationIds) {
     console.log("Fetching new bixi data");
 
     try {
-        let result = {};
-
-        const [statusResponse, infoResponse, alertResponse] = await Promise.all([
+        const [statusResponse, infoResponse, alertsResponse] = await Promise.all([
             fetch(STATUS_URL),
             fetch(INFO_URL),
-            fetch(ALERT_URL)
+            fetch(ALERTS_URL)
         ]);
 
-        if (!statusResponse.ok || !infoResponse.ok || !alertResponse.ok) {
-            throw new Error(`HTTP error: ${statusResponse.status}, ${infoResponse.status}, ${alertResponse.status}`);
+        if (!statusResponse.ok || !infoResponse.ok || !alertsResponse.ok) {
+            throw new Error(`HTTP error: ${statusResponse.status}, ${infoResponse.status}, ${alertsResponse.status}`);
         }
 
         console.log("Bixi data received. Parsing...");
-        const [statusJson, infoJson, alertJson] = await Promise.all([
+        const [statusJson, infoJson, alertsJson] = await Promise.all([
             statusResponse.json(),
             infoResponse.json(),
-            alertResponse.json()
+            alertsResponse.json()
         ]);
 
-        // get alerts
-        const alertLastUpdated = alertJson.last_updated;
-        const activeAlerts = alertJson.data.alerts.filter((a) => {
-            for (const time of a.times) {
-                if (time.start < alertLastUpdated && (time.end > alertLastUpdated || !time.end)) return true;
-            }
-            return false;
-        });
-        result["alerts"] = activeAlerts;
-
-        // stations
-        result["stations"] = {};
-
-        for (const stationId of stationIds) {
-            const stationInfo = infoJson.data.stations.find((s) => stationId == s.station_id);
-            const stationStatus = statusJson.data.stations.find((s) => stationId == s.station_id);
-            if (!stationInfo || !stationStatus) {
-                console.error("Can't find station " + stationId);
-                continue;
-            }
-            result["stations"][stationId] = formatStationData(stationStatus, stationInfo);
+        return {
+            status: statusJson,
+            info: infoJson,
+            alerts: alertsJson
         }
-
-        return result;
 
     }
     catch (error) {
         console.error("Error fetching bixi data", error);
     }
+}
 
+function processData(stationIds, data) {
+    let processed = {};
+    // get alerts
+    const alertLastUpdated = data.alerts.last_updated;
+    const activeAlerts = data.alerts.data.alerts.filter((a) => {
+        for (const time of a.times) {
+            if (time.start < alertLastUpdated && (time.end > alertLastUpdated || !time.end)) return true;
+        }
+        return false;
+    });
+    processed["alerts"] = activeAlerts;
+
+    // stations
+    processed["stations"] = {};
+
+    for (const stationId of stationIds) {
+        const stationInfo = data.info.data.stations.find((s) => stationId == s.station_id);
+        const stationStatus = data.status.data.stations.find((s) => stationId == s.station_id);
+        if (!stationInfo || !stationStatus) {
+            console.error("Can't find station " + stationId);
+            continue;
+        }
+        processed["stations"][stationId] = formatStationData(stationStatus, stationInfo);
+    }
+
+    return processed;
 }
 
 function formatStationData(status, info) {
@@ -85,5 +91,8 @@ export async function getData(stationIds) {
     const newDataFunction = async () => {
         return await fetchNewData(stationIds);
     }
-    return await utils.handleCachedData(CACHE_PATH, MILLISECONDS_UNTIL_STALE, newDataFunction);
+
+    const data = await utils.handleCachedData(CACHE_PATH, MILLISECONDS_UNTIL_STALE, newDataFunction);
+
+    return processData(stationIds, data);
 }

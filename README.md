@@ -21,9 +21,9 @@ Through NPM, all things are possible (version 26+ because Temporal)
 ### Bugfixes
 
 - Data caching doesn't properly account for if there's multiple instances of a widget with different options / params / data needs
-    - For Bixi: pull new data if querying a station not in cached data
-    - For Weather: store `{lastFetched, data}` object under a `latitude,longitude` key, and update each such pair separately (will need boolean flag for whether to modify or overwrite json object)
+    - For weather, store each long/lat query in a separate file
 
 ### Other
 
-Puppeteer can screenshot an element instead of the whole page so possible I can do something with that
+- Puppeteer can screenshot an element instead of the whole page so possible I can do something with that
+- Fonts: currently using ttf files downloaded from google fonts. Would be preferable to use woff2 instead
