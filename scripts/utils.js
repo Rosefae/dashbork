@@ -80,3 +80,105 @@ export function findObjWithKeyValuePairInArray(arr, key, value) {
     }
     return false;
 }
+
+/**
+ * Returns a string representing the given instant in the given format
+ * @param {Temporal.instant} instant 
+ * @param {String} format 
+ * 
+ * Date format key:
+- YYYY: full year (eg 2026)
+- YY: last 2 digits of year (eg 26)
+- MMMM: full month name (eg August)
+- MMM: abbreviated month name (eg Aug)
+- MM: 0-padded month number (eg 08)
+- M: non-0-padded month number (eg 8)
+- DD: 0-padded day of month (eg 07)
+- D: non-0-padded day of month (eg 7)
+- dddd: full day of week name (eg Saturday)
+- ddd: abbreviated day of week name (eg Sat)
+- dd: extra abbreviated day of week name (eg Sa)
+
+Time format key:
+- HH: 0-padded hour (24 hour) (eg 13)
+- H: non-0-padded hour (24 hour)
+- hh: 0-padded hour (12 hour) (eg 07)
+- h: non-0-padded hour (12 hour) (eg 7)
+- mm: minutes
+- pp: am or pm
+- PP: AM or PM
+ */
+export function getZonedTimeStringFromInstant(instant, format) {
+    const zonedTime = instant.toZonedDateTimeISO(constants.TIMEZONE);
+
+    const months = {
+        long: [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+        ],
+        short: [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec"
+        ]
+    }
+
+    const daysOfWeek = {
+        long: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+        short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        shorter: ["Su", "M", "T", "W", "Th", "F", "Sa"]
+    }
+
+    const formatTimeMap = {
+        YYYY: zonedTime.year,
+        YY: zonedTime.year % 100,
+        MMMM: months.long[zonedTime.month - 1],
+        MMM: months.short[zonedTime.month - 1],
+        MM: String(zonedTime.month).padStart(2, "0"),
+        M: zonedTime.month,
+        DD: String(zonedTime.day).padStart(2, "0"),
+        D: zonedTime.day,
+        dddd: daysOfWeek.long[zonedTime.daysOfWeek % 7],
+        ddd: daysOfWeek.short[zonedTime.daysOfWeek % 7],
+        dd: daysOfWeek.shorter[zonedTime.daysOfWeek % 7],
+
+        HH: String(zonedTime.hour).padStart(2, "0"),
+        H: zonedTime.hour,
+        hh: String(format12hour(zonedTime.hour)).padStart(2, "0"),
+        h: format12hour(zonedTime.hour),
+        mm: String(zonedTime.minute).padStart(2, "0"),
+        pp: (zonedTime.hour >= 12 ? "pm" : "am"),
+        PP: (zonedTime.hour >= 12 ? "pm" : "am").toUpperCase()
+    }
+
+    let t = format.replace(/Y{2}|Y{4}|M{1,4}|D{1,2}|d{2,4}|H{1,2}|h{1,2}|mm|pp|PP/g, (matched) => formatTimeMap[matched]);
+    return t;
+
+    function format12hour(hh) {
+        hh = hh % 12;
+        if (hh == 0) {
+            hh = 12;
+        }
+        return hh;
+    }
+
+}

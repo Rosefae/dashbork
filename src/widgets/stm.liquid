@@ -11,11 +11,15 @@ Real-time STM bus schedule
 <script>
     initWidgetStm(
         document.getElementById("{{widgetId}}"),
-        {{ stm.stop_ids | json }}
+        {{ stm.stop_ids | json }},
+        {{ stm.num_buses_to_show | default: 5 }},
+        {{ stm.max_minutes_to_show | default: 120 }}
     );
     {% unless stm.is_subsequent_instance %}
-        async function initWidgetStm(widget, stopIds) {
+        async function initWidgetStm(widget, stopIds, numBuses, maxMinutes) {
             const params = new URLSearchParams();
+            params.append("numBuses", numBuses);
+            params.append("maxMinutes", maxMinutes);
             for (const stopId of stopIds) {
                 params.append("stopIds", stopId);
             }

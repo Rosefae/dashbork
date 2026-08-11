@@ -43,7 +43,9 @@ app.get('/data/bixi', async (req, res) => {
 app.get('/data/stm', async (req, res) => {
     try {
         const stopIds = req.query.stopIds;
-        const data = await getStmData(stopIds);
+        const numBuses = req.query.numBuses;
+        const maxMinutes = req.query.maxMinutes;
+        const data = await getStmData(stopIds, numBuses, maxMinutes);
 
         res.json(data);
     } catch (error) {

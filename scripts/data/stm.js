@@ -13,7 +13,7 @@ const API_KEY = process.env.STM_API_KEY,
         }
     };
 
-const MILLISECONDS_UNTIL_STALE = 600 * 60 * 1000; // 1 minute
+const MILLISECONDS_UNTIL_STALE = (1000000 /* DEBUGGING NUMBER */) * 60 * 1000; // 1 minute
 
 async function fetchNewScheduleData() {
     console.log("Fetching new STM schedule data");
@@ -68,8 +68,54 @@ async function parseProtobufResponse(response) {
     return tripUpdates;
 }
 
-function processGtfsData(gtfsData) {
-    // TODO 
+function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes) {
+    console.log("Looking through live info for requested stops...");
+
+    let result = {};
+    let stopIdStrs = stopIds.map((stopId) => {
+        let s = String(stopId);
+        result[s] = [];
+        return s;
+    });
+
+    const now = Temporal.Now.instant();
+    console.log(maxMinutes);
+    // const maxDuration = new Temporal.Duration(minutes = maxMinutes);
+    console.log("woof");
+
+    console.log(gtfsData.length);
+    for (const tripData of gtfsData) {
+        if (tripData.trip.scheduleRelationship == "CANCELED") continue; 
+
+        console.log(tripData.stopTimeUpdate.length);
+        // Something is making it hang at the one where this is lenght 12, continue invesetigating later
+        for (const stop of tripData.stopTimeUpdate) {
+            if (!stopIdStrs.includes(stop.stopId)) continue;
+            console.log("Found relevant stop");
+            if (result[stop.stopId].length > numBuses) continue;
+            console.log("Max number of next buses not yet reached");
+            if (stop.scheduleRelationship == "SKIPPED") continue;
+            console.log("stop not skipped");
+
+            const stopTimeEpochSeconds = stop.departure.time;
+            if (!stopTimeEpochSeconds) continue;
+
+            console.log(stop.departure.time);
+            const stopTime = Temporal.Instant.fromEpochMilliseconds(stopTimeEpochSeconds * 1000);
+            const timeUntil = now.until(stopTime, { smallestUnit: "minutes" });
+            // if (timeUntil.sign <= 0) continue;
+            // if (Temporal.compare(timeUntil, maxDuration) > 0) continue;
+
+            const stopTimeString = utils.getZonedTimeStringFromInstant(stopTime, "h:mm PP"); // todo: get format from params
+
+            result[stop.stopId].push(`${stopTimeString} (in ${timeUntil.minutes})`);
+            // also needs to add bus route and direction here lul
+        }
+    }
+
+    console.log(result);
+
+    return result;
 }
 
 function processStatusData(statusData, stopIds) {
@@ -116,7 +162,7 @@ function processStatusData(statusData, stopIds) {
     return result;
 }
 
-export async function getData(stopIds) {
+export async function getData(stopIds, numBuses, maxMinutes) {
     console.log("Getting STM data...");
 
     const [scheduleData, statusData] = await Promise.all([
@@ -131,7 +177,8 @@ export async function getData(stopIds) {
     console.log("Got all STM data. Processing...");
 
     const result = {
-        alerts: processStatusData(statusData, stopIds)
+        alerts: processStatusData(statusData, stopIds),
+        stopTimes: processGtfsData(scheduleData, stopIds, numBuses, maxMinutes)
     }
 
     return result;

@@ -18,3 +18,5 @@ export const RENDERS_PUBLIC_URL = PUBLIC_BASE_URL + RENDERS_REL_URL;
 
 export const DATACACHE_REL_PATH = "./cached_data";
 export const DATACACHE_ABS_PATH = path.join(process.cwd(), DATACACHE_REL_PATH);
+
+export const TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
