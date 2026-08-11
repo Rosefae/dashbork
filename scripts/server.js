@@ -7,6 +7,7 @@ import * as utils from "./utils.js";
 
 import { getData as getWeatherData } from "./data/weather.js";
 import { getData as getBixiData } from "./data/bixi.js";
+import { getData as getStmData } from "./data/stm.js";
 
 import { renderImage } from "./renderImage.js";
 
@@ -32,6 +33,17 @@ app.get('/data/bixi', async (req, res) => {
     try {
         const stationIds = req.query.stationIds;
         const data = await getBixiData(stationIds);
+
+        res.json(data);
+    } catch (error) {
+        res.status(400).json(error);
+    }
+});
+
+app.get('/data/stm', async (req, res) => {
+    try {
+        const stopIds = req.query.stopIds;
+        const data = await getStmData(stopIds);
 
         res.json(data);
     } catch (error) {

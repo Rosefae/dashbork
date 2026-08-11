@@ -1,0 +1,38 @@
+{% comment %} 
+Real-time STM bus schedule 
+{% endcomment %}
+
+{% capture widgetId %}widget-stm-{% uuid %}{% endcapture %}
+
+<div id="{{widgetId}}" class="widget widget-stm {{ stm.extra_classes }}">
+    
+</div>
+
+<script>
+    initWidgetStm(
+        document.getElementById("{{widgetId}}"),
+        {{ stm.stop_ids | json }}
+    );
+    {% unless stm.is_subsequent_instance %}
+        async function initWidgetStm(widget, stopIds) {
+            const params = new URLSearchParams();
+            for (const stopId of stopIds) {
+                params.append("stopIds", stopId);
+            }
+            try {
+                const queryString = params.toString();
+                const response = await fetch(`/data/stm?${queryString}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log(data);
+
+            } catch(error){
+                console.error(error);
+            }
+        }
+    {% endunless %}
+</script>

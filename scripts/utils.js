@@ -66,3 +66,17 @@ export async function writeFileAndMakeDir(filePath, data) {
         console.error("Error writing file", error);
     }
 }
+
+/**
+ * In an array of objects, find the object with a specific key/value pair
+ * @param {*} arr 
+ * @param {*} key 
+ * @param {*} value 
+ */
+export function findObjWithKeyValuePairInArray(arr, key, value) {
+    for (const obj of arr) {
+        if (!Object.hasOwn(obj, key)) continue;
+        if (obj[key] == value) return obj;
+    }
+    return false;
+}
