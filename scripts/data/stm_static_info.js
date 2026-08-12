@@ -16,21 +16,32 @@ const [directions, routes, stops] = await Promise.all([
     parseCSV("stops.csv")
 ]);
 
-let formattedRoutes = {};
+let busRoutes = {};
+let metroLines = {};
 
 routes.forEach((route) => {
-    if (route.route_type == "1") return;
-    const formatted = {
-        route_short_name: route.route_short_name,
-        route_color: route.route_color,
-        route_text_color: route.route_text_color,
-        directions: {}
+    if (route.route_type == "1") {
+        const formattedMetro = {
+            route_short_name: route.route_short_name,
+            route_color_name: route.route_long_name.split(" - ").at(-1),
+            route_color: route.route_color,
+            route_text_color: route.route_text_color
+        }
+        metroLines[route.route_id] = formattedMetro;
     }
-    formattedRoutes[route.route_id] = formatted;
+    else {
+        const formattedBus = {
+            route_short_name: route.route_short_name,
+            route_color: route.route_color,
+            route_text_color: route.route_text_color,
+            directions: {}
+        }
+        busRoutes[route.route_id] = formattedBus;
+    }
 });
 
 directions.forEach((direction) => {
-    let route = formattedRoutes[direction.route_id];
+    let route = busRoutes[direction.route_id];
     if (!route) return;
     route.directions[direction.direction_id] = direction.direction;
 });
@@ -43,7 +54,8 @@ stops.forEach((stop) => {
 
 try {
     const dataString = JSON.stringify({
-        routes: formattedRoutes,
+        metros: metroLines,
+        busRoutes: busRoutes,
         stops: formattedStops
     });
     await utils.writeFileAndMakeDir(fileStorePath, dataString);

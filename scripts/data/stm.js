@@ -18,6 +18,9 @@ const API_KEY = process.env.STM_API_KEY,
 
 const MILLISECONDS_UNTIL_STALE = 60 * 1000; // 1 minute
 
+const NORMAL_METRO_STATUS_MESSAGE_EN = "Normal métro service",
+    NORMAL_METRO_STATUS_MESSAGE_FR = "Service normal du métro";
+
 async function fetchNewScheduleData() {
     console.log("Fetching new STM schedule data");
 
@@ -97,10 +100,12 @@ function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, timeFormat, st
 
             let busesAtStop = result[stop.stopId];
             if (!Object.hasOwn(busesAtStop, routeId)) {
-                const routeInfo = staticInfo.routes[tripData.trip.routeId];
+                const routeInfo = staticInfo.busRoutes[tripData.trip.routeId];
                 busesAtStop[routeId] = {
                     route: routeInfo.route_short_name,
                     direction: routeInfo.directions[tripData.trip.directionId],
+                    route_color: routeInfo.route_color,
+                    route_text_color: routeInfo.route_text_color,
                     times: []
                 };
             }
@@ -133,11 +138,13 @@ function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, timeFormat, st
     return result;
 }
 
-function processStatusData(statusData, stopIds) {
+function processStatusData(statusData, stopIds, staticInfo) {
     console.log("Searching for relevant status messages...");
     const now = Temporal.Now.instant().epochMilliseconds / 1000; // epochSeconds
 
-    const result = {};
+    const result = {
+        metros: []
+    };
 
     statusData.alerts.forEach((a) => {
         // check active periods
@@ -148,7 +155,8 @@ function processStatusData(statusData, stopIds) {
         let relevantStops = stopIds.filter((stopId) => {
             return utils.findObjWithKeyValuePairInArray(a.informed_entities, "stop_code", stopId)
         });
-        if (relevantStops.length <= 0) return;
+        const affectedMetroLine = isAlertMetroStatus(a);
+        if (relevantStops.length <= 0 && !affectedMetroLine) return;
         
         // pass on english header and description texts. fallback to french
         let heading = utils.findObjWithKeyValuePairInArray(a.header_texts, "language", "en");
@@ -160,9 +168,15 @@ function processStatusData(statusData, stopIds) {
             description = utils.findObjWithKeyValuePairInArray(a.description_texts, "language", "fr");
         }
 
-        const alertMsg = {
+        let alertMsg = {
             heading: heading.text,
             description: description.text
+        }
+
+        if (affectedMetroLine) {
+            alertMsg["line"] = affectedMetroLine;
+            alertMsg["ok"] = alertMsg.description == NORMAL_METRO_STATUS_MESSAGE_EN || alertMsg.description == NORMAL_METRO_STATUS_MESSAGE_FR;
+            result.metros.push(alertMsg);
         }
 
         relevantStops.forEach((stopId) => {
@@ -174,7 +188,17 @@ function processStatusData(statusData, stopIds) {
         });
     });
 
+    result.metros.sort((a, b) => a.line.route_short_name - b.line.route_short_name);
+
     return result;
+
+    function isAlertMetroStatus(a) {
+        for (const line of Object.keys(staticInfo.metros)) {
+            if (utils.findObjWithKeyValuePairInArray(a.informed_entities, "route_short_name", line)
+                && a.informed_entities.length == 1) return staticInfo.metros[line];
+        }
+        return null;
+    }
 }
 
 async function getStaticInfo() {
@@ -203,10 +227,13 @@ export async function getData(stopIds, numBuses, maxMinutes, timeFormat) {
 
     console.log("Got all STM data. Processing...");
 
-    const alerts = processStatusData(statusData, stopIds);
+    const alerts = processStatusData(statusData, stopIds, staticInfo);
     const stopTimes = processGtfsData(scheduleData, stopIds, numBuses, maxMinutes, timeFormat, staticInfo);
 
-    const result = [];
+    const result = {
+        busStops: [],
+        metroStatuses: alerts.metros
+    };
     
     stopIds.forEach((stopId) => {
         const stopIdStr = String(stopId);
@@ -218,7 +245,7 @@ export async function getData(stopIds, numBuses, maxMinutes, timeFormat) {
             buses: stopTimes[stopIdStr]
         }
 
-        result.push(stop);
+        result.busStops.push(stop);
     });
 
     return result;

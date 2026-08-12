@@ -9,7 +9,7 @@
     "watch": "node scripts/watch.js",
     "serve": "node --env-file=.env scripts/server.js",
     "serveDev": "npm run build && concurrently -k -c green.dim,cyan.dim -s first \"npm:watch\" \"npm:serve\"",
-    "parseStmInfo": "node scripts/data/stm-static-info.js"
+    "parseStmInfo": "node scripts/data/stm_static_info.js"
   },
   "keywords": [],
   "author": "",

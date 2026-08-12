@@ -35,17 +35,38 @@ Real-time STM bus schedule
 
                 const data = await response.json();
                 console.log(data);
-                renderStops(data);
+                renderMetroStatus(data.metroStatuses);
+                renderStops(data.busStops);
 
             } catch(error){
                 console.error(error);
             }
 
-            function renderStops(data) {
+            function renderMetroStatus(metroData) {
+                const listEl = document.createElement("ul");
+                listEl.classList.add("widget-stm__metros");
+
+                metroData.forEach((metro)=>{
+                    const listItemEl = document.createElement("li");
+                    listItemEl.classList.add("widget-stm__metro-line");
+                    listItemEl.style.setProperty("--metro-color", "metro.line.route_color");
+                    listItemEl.style.setProperty("--metro-text-color", "metro.line.route_text_color");
+                    listItemEl.dataset.ok = metro.ok;
+                    listItemEl.innerHTML = `
+                        <span class="widget-stm__metro-name">${metro.line.route_color_name}</span>
+                        <span class="widget-stm__metro-message">${metro.description}</span>
+                    `;
+                    listEl.appendChild(listItemEl);
+                });
+
+                widget.appendChild(listEl);
+            }
+
+            function renderStops(busStopsData) {
                 const listEl = document.createElement("ul");
                 listEl.classList.add("widget-stm__stops");
 
-                for (const stopData of data) {
+                for (const stopData of busStopsData) {
                     const listItemEl = createListItemForStop(stopData);
                     listEl.appendChild(listItemEl);
                 }
