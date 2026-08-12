@@ -97,10 +97,15 @@ function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, timeFormat, st
 
             let busesAtStop = result[stop.stopId];
             if (!Object.hasOwn(busesAtStop, routeId)) {
-                busesAtStop[routeId] = [];
+                const routeInfo = staticInfo.routes[tripData.trip.routeId];
+                busesAtStop[routeId] = {
+                    route: routeInfo.route_short_name,
+                    direction: routeInfo.directions[tripData.trip.directionId],
+                    times: []
+                };
             }
 
-            if (busesAtStop[routeId].length > numBuses) continue;
+            if (busesAtStop[routeId].times.length > numBuses) continue;
 
             const stopTimeEpochSeconds = stop.departure.time;
             if (!stopTimeEpochSeconds) continue;
@@ -111,12 +116,8 @@ function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, timeFormat, st
             if (Temporal.Duration.compare(timeUntil, maxDuration) > 0) continue;
 
             const stopTimeString = utils.getZonedTimeStringFromInstant(stopTime, timeFormat);
-            
-            const routeInfo = staticInfo.routes[tripData.trip.routeId];
 
-            busesAtStop[routeId].push({
-                route: routeInfo.route_short_name,
-                direction: routeInfo.directions[tripData.trip.directionId],
+            busesAtStop[routeId].times.push({
                 time: stopTimeString,
                 minutesUntil: timeUntil.minutes
             });
@@ -125,7 +126,7 @@ function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, timeFormat, st
 
     Object.values(result).forEach((stopResult) => {
         Object.values(stopResult).forEach((busResult) => {
-            busResult.sort((a, b) => a.minutesUntil - b.minutesUntil);
+            busResult.times.sort((a, b) => a.minutesUntil - b.minutesUntil);
         });
     });
 
