@@ -1,7 +1,10 @@
+import * as path from "node:path";
+import * as fs from "node:fs";
 import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 
 import * as constants from "../constants.js";
 import * as utils from "../utils.js";
+import { fstat } from "node:fs";
 
 const GTFS_URL = "https://api.stm.info/pub/od/gtfs-rt/ic/v2/tripUpdates",
     STATUS_URL = "https://api.stm.info/pub/od/i3/v2/messages/etatservice";
@@ -68,39 +71,45 @@ async function parseProtobufResponse(response) {
     return tripUpdates;
 }
 
-function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes) {
+function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, staticInfo) {
     console.log("Looking through live info for requested stops...");
 
     let result = {};
     let stopIdStrs = stopIds.map((stopId) => {
         let s = String(stopId);
-        result[s] = [];
+        result[s] = {
+            name: staticInfo.stops[s],
+            buses: {}
+        };
         return s;
     });
 
     const now = Temporal.Now.instant();
     console.log(maxMinutes);
     // const maxDuration = new Temporal.Duration(minutes = maxMinutes);
-    console.log("woof");
 
-    console.log(gtfsData.length);
     for (const tripData of gtfsData) {
         if (tripData.trip.scheduleRelationship == "CANCELED") continue; 
+        if (!tripData.stopTimeUpdate) continue;
 
-        console.log(tripData.stopTimeUpdate.length);
-        // Something is making it hang at the one where this is lenght 12, continue invesetigating later
+        console.log(tripData.trip.tripId);
+        const routeId = tripData.trip.routeId;
+
         for (const stop of tripData.stopTimeUpdate) {
             if (!stopIdStrs.includes(stop.stopId)) continue;
-            console.log("Found relevant stop");
-            if (result[stop.stopId].length > numBuses) continue;
-            console.log("Max number of next buses not yet reached");
             if (stop.scheduleRelationship == "SKIPPED") continue;
-            console.log("stop not skipped");
+            if (!stop.departure) continue;
+
+            let busesAtStop = result[stop.stopId].buses;
+            if (!Object.hasOwn(busesAtStop, routeId)) {
+                busesAtStop[routeId] = [];
+            }
+
+            if (busesAtStop[routeId].length > numBuses) continue;
 
             const stopTimeEpochSeconds = stop.departure.time;
             if (!stopTimeEpochSeconds) continue;
 
-            console.log(stop.departure.time);
             const stopTime = Temporal.Instant.fromEpochMilliseconds(stopTimeEpochSeconds * 1000);
             const timeUntil = now.until(stopTime, { smallestUnit: "minutes" });
             // if (timeUntil.sign <= 0) continue;
@@ -108,12 +117,16 @@ function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes) {
 
             const stopTimeString = utils.getZonedTimeStringFromInstant(stopTime, "h:mm PP"); // todo: get format from params
 
-            result[stop.stopId].push(`${stopTimeString} (in ${timeUntil.minutes})`);
-            // also needs to add bus route and direction here lul
+            const routeInfo = staticInfo.routes[tripData.trip.routeId];
+
+            busesAtStop[routeId].push({
+                route: routeInfo.route_short_name,
+                direction: routeInfo.directions[tripData.trip.directionId],
+                time: stopTimeString,
+                minutesUntil: timeUntil.minutes
+            });
         }
     }
-
-    console.log(result);
 
     return result;
 }
@@ -162,23 +175,35 @@ function processStatusData(statusData, stopIds) {
     return result;
 }
 
+async function getStaticInfo() {
+    try {
+        const raw = await fs.promises.readFile(path.join(constants.DATACACHE_ABS_PATH, "stm-info.json"));
+        const info = JSON.parse(raw);
+        return info;
+    }
+    catch (error) {
+        console.error("Error getting static STM info", error);
+    }
+}
+
 export async function getData(stopIds, numBuses, maxMinutes) {
     console.log("Getting STM data...");
 
-    const [scheduleData, statusData] = await Promise.all([
+    const [scheduleData, statusData, staticInfo] = await Promise.all([
         utils.handleCachedData("stm-gtfs.json", MILLISECONDS_UNTIL_STALE, async () => {
             return await fetchNewScheduleData();
         }),
         utils.handleCachedData("stm-status.json", MILLISECONDS_UNTIL_STALE, async () => {
             return await fetchNewStatusData();
-        })
+        }),
+        getStaticInfo()
     ]);
 
     console.log("Got all STM data. Processing...");
 
     const result = {
         alerts: processStatusData(statusData, stopIds),
-        stopTimes: processGtfsData(scheduleData, stopIds, numBuses, maxMinutes)
+        stopTimes: processGtfsData(scheduleData, stopIds, numBuses, maxMinutes, staticInfo)
     }
 
     return result;

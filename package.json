@@ -8,7 +8,8 @@
     "build": "npx @11ty/eleventy",
     "watch": "node scripts/watch.js",
     "serve": "node --env-file=.env scripts/server.js",
-    "serveDev": "npm run build && concurrently -k -c green.dim,cyan.dim -s first \"npm:watch\" \"npm:serve\""
+    "serveDev": "npm run build && concurrently -k -c green.dim,cyan.dim -s first \"npm:watch\" \"npm:serve\"",
+    "parseStmInfo": "node scripts/data/stm-static-info.js"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +18,7 @@
   "dependencies": {
     "@11ty/eleventy": "^3.1.6",
     "concurrently": "^10.0.4",
+    "csv-parse": "^7.0.2",
     "express": "^5.2.1",
     "gtfs-realtime-bindings": "^2.2.0",
     "jimp": "^1.6.1",

@@ -2,4 +2,5 @@ node_modules
 pages
 renders
 cached_data
+data_for_manual_import
 .env
