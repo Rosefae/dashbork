@@ -45,7 +45,8 @@ app.get('/data/stm', async (req, res) => {
         const stopIds = req.query.stopIds;
         const numBuses = req.query.numBuses;
         const maxMinutes = req.query.maxMinutes;
-        const data = await getStmData(stopIds, numBuses, maxMinutes);
+        const timeFormat = req.query.timeFormat;
+        const data = await getStmData(stopIds, numBuses, maxMinutes, timeFormat);
 
         res.json(data);
     } catch (error) {

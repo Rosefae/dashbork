@@ -71,7 +71,7 @@ async function parseProtobufResponse(response) {
     return tripUpdates;
 }
 
-function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, staticInfo) {
+function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, timeFormat, staticInfo) {
     console.log("Looking through live info for requested stops...");
 
     let result = {};
@@ -110,8 +110,8 @@ function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, staticInfo) {
             if (timeUntil.sign <= 0) continue;
             if (Temporal.Duration.compare(timeUntil, maxDuration) > 0) continue;
 
-            const stopTimeString = utils.getZonedTimeStringFromInstant(stopTime, "h:mm PP"); // todo: get format from params
-
+            const stopTimeString = utils.getZonedTimeStringFromInstant(stopTime, timeFormat);
+            
             const routeInfo = staticInfo.routes[tripData.trip.routeId];
 
             busesAtStop[routeId].push({
@@ -187,7 +187,7 @@ async function getStaticInfo() {
     }
 }
 
-export async function getData(stopIds, numBuses, maxMinutes) {
+export async function getData(stopIds, numBuses, maxMinutes, timeFormat) {
     console.log("Getting STM data...");
 
     const [scheduleData, statusData, staticInfo] = await Promise.all([
@@ -203,7 +203,7 @@ export async function getData(stopIds, numBuses, maxMinutes) {
     console.log("Got all STM data. Processing...");
 
     const alerts = processStatusData(statusData, stopIds);
-    const stopTimes = processGtfsData(scheduleData, stopIds, numBuses, maxMinutes, staticInfo);
+    const stopTimes = processGtfsData(scheduleData, stopIds, numBuses, maxMinutes, timeFormat, staticInfo);
 
     const result = [];
     
