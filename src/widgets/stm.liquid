@@ -35,9 +35,99 @@ Real-time STM bus schedule
 
                 const data = await response.json();
                 console.log(data);
+                renderStops(data);
 
             } catch(error){
                 console.error(error);
+            }
+
+            function renderStops(data) {
+                const listEl = document.createElement("ul");
+                listEl.classList.add("widget-stm__stops");
+
+                for (const stopData of data) {
+                    const listItemEl = createListItemForStop(stopData);
+                    listEl.appendChild(listItemEl);
+                }
+
+                widget.appendChild(listEl);
+            }
+
+            function createListItemForStop(stopData) {
+                let listItemEl = document.createElement("li");
+                listItemEl.classList.add("widget-stm__stop");
+                listItemEl.innerHTML = `
+                    <div class="widget-stm__stop-name">${stopData.name}</div>
+                    ${stopData.alerts ? alertsHtmlString(stopData.alerts) : ""}
+                    ${Object.keys(stopData.buses).length > 0 ? busesHtmlString(stopData.buses) : ""}
+                `;
+                return listItemEl;
+            }
+
+            function alertsHtmlString(alertsData) {
+                let result = "<ul class='widget-stm__stop-alerts'>"
+
+                for (const alertData of alertsData) {
+                    result += `
+                        <li class="widget-stm__stop-alert">
+                            ${alertData.description}
+                        </li>
+                    `;
+                }
+
+                result += "</ul>"
+
+                return result;
+            }
+
+            function busesHtmlString(busesData) {
+                let result = "<ul class='widget-stm__buses'>"
+
+                for (const bus of Object.values(busesData)) {
+                    let busItem = `
+                        <li class="widget-stm__bus">
+                            <div class="widget-stm__bus-heading">
+                                <span class="widget-stm__bus-heading-route">${bus.route}</span>
+                                <span class="widget-wtm__bus-heading-direction">${bus.direction}</span>
+                            </div>
+                    `;
+
+                    if (bus.times.length > 0) busItem += busTimesHtmlString(bus.times);
+
+                    busItem += "</li>";
+                    result += busItem;
+                }
+
+                result += "</ul>";
+                return result;
+            }
+
+            function busTimesHtmlString(timesData) {
+                let result = "<ul class='widget-stm__bus-times'>";
+                    for (const busTime of timesData) {
+                        result += `
+                            <li class="widget-stm__bus-time">
+                                <span class="widget-stm__bus-time-abs">${busTime.time}</span>
+                                <span class="widget-stm__bus-time-rel">in ${displayMinutes(busTime.minutesUntil)}</span>
+                            </li>
+                        `;
+                    }
+
+                result += "</ul>";
+                return result;
+            }
+
+            function displayMinutes(minutes) {
+                const hours = Math.trunc(minutes / 60);
+                const newMinutes = minutes % 60;
+
+                let hoursString = "";
+                if (hours > 1) hoursString = `${hours} hours `;
+                else if (hours == 1) hoursString = `${hours} hour `;
+
+                const minutesString = (newMinutes == 1 ? `${newMinutes} minute` : `${newMinutes} minutes`);
+
+                return hoursString + minutesString;
             }
         }
     {% endunless %}
