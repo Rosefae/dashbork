@@ -16,7 +16,7 @@ const API_KEY = process.env.STM_API_KEY,
         }
     };
 
-const MILLISECONDS_UNTIL_STALE = (1000000 /* DEBUGGING NUMBER */) * 60 * 1000; // 1 minute
+const MILLISECONDS_UNTIL_STALE = 60 * 1000; // 1 minute
 
 async function fetchNewScheduleData() {
     console.log("Fetching new STM schedule data");
@@ -77,22 +77,17 @@ function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, staticInfo) {
     let result = {};
     let stopIdStrs = stopIds.map((stopId) => {
         let s = String(stopId);
-        result[s] = {
-            name: staticInfo.stops[s],
-            buses: {}
-        };
+        result[s] = {};
         return s;
     });
 
     const now = Temporal.Now.instant();
-    console.log(maxMinutes);
-    // const maxDuration = new Temporal.Duration(minutes = maxMinutes);
+    const maxDuration = Temporal.Duration.from({ minutes: maxMinutes });
 
     for (const tripData of gtfsData) {
         if (tripData.trip.scheduleRelationship == "CANCELED") continue; 
         if (!tripData.stopTimeUpdate) continue;
 
-        console.log(tripData.trip.tripId);
         const routeId = tripData.trip.routeId;
 
         for (const stop of tripData.stopTimeUpdate) {
@@ -100,7 +95,7 @@ function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, staticInfo) {
             if (stop.scheduleRelationship == "SKIPPED") continue;
             if (!stop.departure) continue;
 
-            let busesAtStop = result[stop.stopId].buses;
+            let busesAtStop = result[stop.stopId];
             if (!Object.hasOwn(busesAtStop, routeId)) {
                 busesAtStop[routeId] = [];
             }
@@ -112,8 +107,8 @@ function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, staticInfo) {
 
             const stopTime = Temporal.Instant.fromEpochMilliseconds(stopTimeEpochSeconds * 1000);
             const timeUntil = now.until(stopTime, { smallestUnit: "minutes" });
-            // if (timeUntil.sign <= 0) continue;
-            // if (Temporal.compare(timeUntil, maxDuration) > 0) continue;
+            if (timeUntil.sign <= 0) continue;
+            if (Temporal.Duration.compare(timeUntil, maxDuration) > 0) continue;
 
             const stopTimeString = utils.getZonedTimeStringFromInstant(stopTime, "h:mm PP"); // todo: get format from params
 
@@ -201,10 +196,22 @@ export async function getData(stopIds, numBuses, maxMinutes) {
 
     console.log("Got all STM data. Processing...");
 
-    const result = {
-        alerts: processStatusData(statusData, stopIds),
-        stopTimes: processGtfsData(scheduleData, stopIds, numBuses, maxMinutes, staticInfo)
-    }
+    const alerts = processStatusData(statusData, stopIds);
+    const stopTimes = processGtfsData(scheduleData, stopIds, numBuses, maxMinutes, staticInfo);
+
+    const result = [];
+    
+    stopIds.forEach((stopId) => {
+        const stopIdStr = String(stopId);
+        if (!alerts[stopIdStr] && !stopTimes[stopIdStr]) return;
+        let stop = {
+            name: staticInfo.stops[stopIdStr],
+            alerts: alerts[stopIdStr],
+            buses: stopTimes[stopIdStr]
+        }
+
+        result.push(stop);
+    });
 
     return result;
 }
