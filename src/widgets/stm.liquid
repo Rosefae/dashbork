@@ -46,20 +46,39 @@ Real-time STM bus schedule
                 const listEl = document.createElement("ul");
                 listEl.classList.add("widget-stm__metros");
 
+                let notOkayEl = null;
+
                 metroData.forEach((metro)=>{
                     const listItemEl = document.createElement("li");
                     listItemEl.classList.add("widget-stm__metro-line");
-                    listItemEl.style.setProperty("--metro-color", "metro.line.route_color");
-                    listItemEl.style.setProperty("--metro-text-color", "metro.line.route_text_color");
+                    listItemEl.style.setProperty("--metro-color", "#" + metro.line.route_color);
+                    listItemEl.style.setProperty("--metro-text-color", "#" + metro.line.route_text_color);
                     listItemEl.dataset.ok = metro.ok;
                     listItemEl.innerHTML = `
                         <span class="widget-stm__metro-name">${metro.line.route_color_name}</span>
                         <span class="widget-stm__metro-message">${metro.description}</span>
                     `;
                     listEl.appendChild(listItemEl);
+                    
+                    if (!metro.ok) {
+                        if (!notOkayEl) {
+                            notOkayEl = document.createElement("div");
+                            notOkayEl.classList.add("widget-stm__metro-alerts");
+                        }
+                        const newNotOkay = document.createElement("div");
+                        newNotOkay.classList.add("widget-stm__metro-alert");
+                        newNotOkay.style.setProperty("--metro-color", "#" + metro.line.route_color);
+                        newNotOkay.style.setProperty("--metro-text-color", "#" + metro.line.route_text_color);
+                        newNotOkay.innerHTML = `
+                            <span class="widget-stm__metro-alert-line">${metro.line.route_color_name}</span>
+                            <span class="widget-stm__metro-alert-message">${metro.description}</span>
+                        `;
+                        notOkayEl.appendChild(newNotOkay);
+                    }
                 });
 
                 widget.appendChild(listEl);
+                if (notOkayEl) widget.appendChild(notOkayEl);
             }
 
             function renderStops(busStopsData) {
@@ -78,7 +97,10 @@ Real-time STM bus schedule
                 let listItemEl = document.createElement("li");
                 listItemEl.classList.add("widget-stm__stop");
                 listItemEl.innerHTML = `
-                    <div class="widget-stm__stop-name">${stopData.name}</div>
+                    <div class="widget-stm__stop-label">
+                        <span class="widget-stm__stop-name">${stopData.name}</span>
+                        <span class="widget-stm__stop-code">${stopData.stopId}</span>
+                    </div>
                     ${stopData.alerts ? alertsHtmlString(stopData.alerts) : ""}
                     ${Object.keys(stopData.buses).length > 0 ? busesHtmlString(stopData.buses) : ""}
                 `;
@@ -106,7 +128,8 @@ Real-time STM bus schedule
 
                 for (const bus of Object.values(busesData)) {
                     let busItem = `
-                        <li class="widget-stm__bus">
+                        <li class="widget-stm__bus"
+                            style="--bus-color:#${bus.route_color}; --bus-text-color:#${bus.route_text_color}">
                             <div class="widget-stm__bus-heading">
                                 <span class="widget-stm__bus-heading-route">${bus.route}</span>
                                 <span class="widget-wtm__bus-heading-direction">${bus.direction}</span>
@@ -129,7 +152,7 @@ Real-time STM bus schedule
                         result += `
                             <li class="widget-stm__bus-time">
                                 <span class="widget-stm__bus-time-abs">${busTime.time}</span>
-                                <span class="widget-stm__bus-time-rel">in ${displayMinutes(busTime.minutesUntil)}</span>
+                                <span class="widget-stm__bus-time-rel">${displayMinutes(busTime.minutesUntil)}</span>
                             </li>
                         `;
                     }
@@ -142,13 +165,16 @@ Real-time STM bus schedule
                 const hours = Math.trunc(minutes / 60);
                 const newMinutes = minutes % 60;
 
-                let hoursString = "";
-                if (hours > 1) hoursString = `${hours} hours `;
-                else if (hours == 1) hoursString = `${hours} hour `;
+                // let hoursString = "";
+                // if (hours > 1) hoursString = `${hours} hours `;
+                // else if (hours == 1) hoursString = `${hours} hour `;
 
-                const minutesString = (newMinutes == 1 ? `${newMinutes} minute` : `${newMinutes} minutes`);
+                const hoursString = hours ? `${hours}hr ` : "";
 
-                return hoursString + minutesString;
+                // const minutesString = (newMinutes == 1 ? `${newMinutes} minute` : `${newMinutes} minutes`);
+                const minutesString = `${newMinutes}min`;
+
+                return "in " + hoursString + minutesString;
             }
         }
     {% endunless %}

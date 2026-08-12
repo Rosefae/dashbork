@@ -53,6 +53,10 @@ CALENDARS = {...} # Stringified JSON of stuff needed for calendar data
 TODOIST = {...} # Stringified JSON of user/API-key pairs
 ```
 
+### STM
+
+The STM doesn't make things like bus stop names and route directions part of the API. Instead they provide a .zip of CSVs 4x a year. Pull the relevant CSVs (`directions.csv`, `routes.csv`, `stops.csv`) into `data_for_manual_import/stm` then run `npm run parseStmInfo` to extract the relevant info. This will need to happen every time the STM provides a new dump to make sure the information stays correct/relevant.
+
 ## Future work
 
 ### 11ty
@@ -62,7 +66,6 @@ TODOIST = {...} # Stringified JSON of user/API-key pairs
 
 ### Widgets to add
 
-- Bus & Metro schedule
 - Todoist integration
 - Pull events from calendar(s)
 

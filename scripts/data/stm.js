@@ -110,7 +110,7 @@ function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, timeFormat, st
                 };
             }
 
-            if (busesAtStop[routeId].times.length > numBuses) continue;
+            if (busesAtStop[routeId].times.length >= numBuses) continue;
 
             const stopTimeEpochSeconds = stop.departure.time;
             if (!stopTimeEpochSeconds) continue;
