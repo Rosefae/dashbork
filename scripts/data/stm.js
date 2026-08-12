@@ -123,6 +123,12 @@ function processGtfsData(gtfsData, stopIds, numBuses, maxMinutes, staticInfo) {
         }
     }
 
+    Object.values(result).forEach((stopResult) => {
+        Object.values(stopResult).forEach((busResult) => {
+            busResult.sort((a, b) => a.minutesUntil - b.minutesUntil);
+        });
+    });
+
     return result;
 }
 
@@ -205,6 +211,7 @@ export async function getData(stopIds, numBuses, maxMinutes) {
         const stopIdStr = String(stopId);
         if (!alerts[stopIdStr] && !stopTimes[stopIdStr]) return;
         let stop = {
+            stopId: stopId,
             name: staticInfo.stops[stopIdStr],
             alerts: alerts[stopIdStr],
             buses: stopTimes[stopIdStr]
