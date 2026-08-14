@@ -265,9 +265,7 @@ export async function getData(params) {
     console.log("Getting weather data...");
 
     const dataCachePath = `weather/lat${params.latitude}long${params.longitude}.json`;
-    const data = await utils.handleCachedData(dataCachePath, DATA_TIME_INTERVAL, async () => {
-        return fetchNewData(params.latitude, params.longitude);
-    });
+    const data = await utils.readCachedData(dataCachePath);
 
     return processData(data);
 }

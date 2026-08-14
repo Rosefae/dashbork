@@ -92,9 +92,7 @@ export async function getData(stationIds) {
 
     console.log("Getting Bixi data...");
 
-    const data = await utils.handleCachedData(CACHE_FILE_NAME, DATA_TIME_INTERVAL, async () => {
-        return await fetchNewData();
-    });
+    const data = await utils.readCachedData(CACHE_FILE_NAME);
 
     return processData(stationIds, data);
 }

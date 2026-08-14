@@ -23,7 +23,7 @@ export const SCHEDULE_CACHE_FILE_NAME = "stm-gtfs.json";
 const NORMAL_METRO_STATUS_MESSAGE_EN = "Normal métro service",
     NORMAL_METRO_STATUS_MESSAGE_FR = "Service normal du métro";
 
-async function fetchNewScheduleData() {
+export async function fetchNewScheduleData() {
     console.log("Fetching new STM schedule data");
 
     try {
@@ -41,7 +41,7 @@ async function fetchNewScheduleData() {
     }
 }
 
-async function fetchNewStatusData() {
+export async function fetchNewStatusData() {
     console.log("Fetching new STM status data");
 
     try {
@@ -218,12 +218,8 @@ export async function getData(stopIds, numBuses, maxMinutes, timeFormat) {
     console.log("Getting STM data...");
 
     const [scheduleData, statusData, staticInfo] = await Promise.all([
-        utils.handleCachedData(SCHEDULE_CACHE_FILE_NAME, DATA_TIME_INTERVAL, async () => {
-            return await fetchNewScheduleData();
-        }),
-        utils.handleCachedData(STATUS_CACHE_FILE_NAME, DATA_TIME_INTERVAL, async () => {
-            return await fetchNewStatusData();
-        }),
+        utils.readCachedData(SCHEDULE_CACHE_FILE_NAME),
+        utils.readCachedData(STATUS_CACHE_FILE_NAME),
         getStaticInfo()
     ]);
 
