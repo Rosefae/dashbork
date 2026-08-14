@@ -5,7 +5,8 @@ const STATUS_URL = "https://gbfs.velobixi.com/gbfs/2-2/en/station_status.json",
     INFO_URL = "https://gbfs.velobixi.com/gbfs/2-2/en/station_information.json",
     ALERTS_URL = "https://gbfs.velobixi.com/gbfs/2-2/en/system_alerts.json";
 
-const DATA_TIME_INTERVAL = 60 * 1000; // 1 minute
+export const DATA_TIME_INTERVAL = 60 * 1000; // 1 minute
+export const CACHE_FILE_NAME = "bixi.json";
 
 export async function fetchNewData() {
     console.log("Fetching new bixi data");
@@ -91,7 +92,7 @@ export async function getData(stationIds) {
 
     console.log("Getting Bixi data...");
 
-    const data = await utils.handleCachedData("bixi.json", DATA_TIME_INTERVAL, async () => {
+    const data = await utils.handleCachedData(CACHE_FILE_NAME, DATA_TIME_INTERVAL, async () => {
         return await fetchNewData();
     });
 

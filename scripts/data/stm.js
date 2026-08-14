@@ -16,7 +16,9 @@ const API_KEY = process.env.STM_API_KEY,
         }
     };
 
-const MILLISECONDS_UNTIL_STALE = 60 * 1000; // 1 minute
+export const DATA_TIME_INTERVAL = 60 * 1000; // 1 minute
+export const STATUS_CACHE_FILE_NAME = "stm-status.json";
+export const SCHEDULE_CACHE_FILE_NAME = "stm-gtfs.json";
 
 const NORMAL_METRO_STATUS_MESSAGE_EN = "Normal métro service",
     NORMAL_METRO_STATUS_MESSAGE_FR = "Service normal du métro";
@@ -216,10 +218,10 @@ export async function getData(stopIds, numBuses, maxMinutes, timeFormat) {
     console.log("Getting STM data...");
 
     const [scheduleData, statusData, staticInfo] = await Promise.all([
-        utils.handleCachedData("stm-gtfs.json", MILLISECONDS_UNTIL_STALE, async () => {
+        utils.handleCachedData(SCHEDULE_CACHE_FILE_NAME, DATA_TIME_INTERVAL, async () => {
             return await fetchNewScheduleData();
         }),
-        utils.handleCachedData("stm-status.json", MILLISECONDS_UNTIL_STALE, async () => {
+        utils.handleCachedData(STATUS_CACHE_FILE_NAME, DATA_TIME_INTERVAL, async () => {
             return await fetchNewStatusData();
         }),
         getStaticInfo()

@@ -2,6 +2,16 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import * as constants from "./constants.js";
+import { errorMonitor } from "node:events";
+
+/**
+ * Wait before resuming execution
+ * @param {int} time in ms 
+ * @returns {Promise} a promise that will take ${time} ms to resolve
+ */
+export function sleep(time) {
+    return new Promise((r) => setTimeout(r, time));
+}
 
 /**
  * Returns cached data, or if it's stale, returns new data and caches it
@@ -11,44 +21,94 @@ import * as constants from "./constants.js";
  * @returns {object} data to be fetched
  */
 export async function handleCachedData(cachePathString, millisecondsUntilStale, getNewDataFunction) {
-    const cachePath = path.join(constants.DATACACHE_ABS_PATH, cachePathString);
-
     // attempt to get cached data first
-    try {
-        console.log(`Attempting to get data from ${cachePathString}`);
-        const raw = await fs.promises.readFile(cachePath);
-        const cachedData = JSON.parse(raw);
-        if (!cachedData.data) throw new Error("Could not find data in cached file");
-        if (!cachedData.lastFetched) throw new Error("Could not find last fetched time");
-
-        if (Temporal.Now.instant().epochMilliseconds - cachedData.lastFetched < millisecondsUntilStale) {
-            // Cached data sufficiently fresh
-            console.log("Serving cached data");
-            return cachedData.data;
-        }
-        console.log("Cached data too old");
-    } catch (error) {
-        console.error("Error reading cached data", error);
+    const cachedData = readCachedData(cachePathString, true);
+    if (Temporal.Now.instant().epochMilliseconds - cachedData.lastFetched < millisecondsUntilStale) {
+        // Cached data sufficiently fresh
+        console.log("Serving cached data");
+        return cachedData.data;
     }
 
     // fetch new data as cached data was not returned
+    const newData = acquireNewDataAndCache(cachePathString, getNewDataFunction);
+
+    return newData;
+}
+
+/**
+ * Read data from the cached data
+ * @param {string} cachePathString 
+ * @param {boolean} justData -  If true, return just the result.data without the lastFetched part 
+ * @returns 
+ */
+export async function readCachedData(cachePathString, includeLastFetched = false) {
+    const cachePath = path.join(constants.DATACACHE_ABS_PATH, cachePathString);
+    try {
+        console.log(`Attempting to get data from ${cachePathString}`);
+        const raw = await readFilePatient(cachePath);
+        const cachedData = JSON.parse(raw);
+        if (!cachedData.data) throw new Error("Could not find data in cached file");
+        if (!includeLastFetched) {
+            return cachedData.data
+        }
+
+        if (!cachedData.lastFetched) throw new Error("Could not find last fetched time");
+        return cachedData;
+    } catch (error) {
+        console.error("Error reading cached data", error);
+    }
+}
+
+export async function readFilePatient(path, maxAttempts = 5, timeBetweenAttempts = 50) {
+    let attempts = 0;
+    while (attempts < maxAttempts) {
+        try {
+            const file = await fs.promises.readFile(path);
+            return file;
+        }
+        catch (error) {
+            if (error.code === "ENOENT" || error.code === "EBUSY") {
+                attempts++;
+                await sleep(timeBetweenAttempts);
+            } else {
+                throw error;
+            }
+        }
+    }
+
+    throw new Error(`Could not read ${path}: file busy even after ${maxAttempts} tries.`);
+}
+
+/**
+ * Get new data from data source and store it in a cached file
+ * @param {string} cachePathString 
+ * @param {function} getNewDataFunction 
+ * @param {boolean} includeLastFetched - whether to include the lastFetch param in the return
+ * @returns {object} the new data
+ */
+export async function acquireNewDataAndCache(cachePathString, getNewDataFunction, includeLastFetched = false) {
+    const cachePath = path.join(constants.DATACACHE_ABS_PATH, cachePathString);
+    const cachePathTemp = path.join(constants.DATACACHE_ABS_PATH, `${cachePathString}--temp`);
     const newTime = Temporal.Now.instant().epochMilliseconds;
-    console.log("Fetching new data instead...");
+
     const newData = await getNewDataFunction();
 
     // write new data to cache
+    const dataWithTime = {
+        lastFetched: newTime,
+        data: newData
+    };
     try {
         console.log("Writing new data to cache file...");
-        const dataString = JSON.stringify({
-            lastFetched: newTime,
-            data: newData
-        });
-        await writeFileAndMakeDir(cachePath, dataString);
+        const dataString = JSON.stringify(dataWithTime);
+        await writeFileAndMakeDir(cachePathTemp, dataString);
+        await fs.promises.rename(cachePathTemp, cachePath);
         console.log("New data cached");
     } catch (error) {
         console.error("Error storing data into cache", error);
     }
 
+    if (includeLastFetched) return dataWithTime;
     return newData;
 }
 

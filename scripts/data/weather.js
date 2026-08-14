@@ -3,7 +3,14 @@ import * as utils from "../utils.js";
 
 const API_URL = "https://api.open-meteo.com/v1/forecast";
 
-const MILLISECONDS_UNTIL_STALE = 5*60*1000; // 5 minutes
+export const DATA_TIME_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+export const PLACES_TO_CARE_ABOUT = [
+    {
+        latitude: 45.46,
+        longitude: -73.57
+    }
+]
 
 const WEATHER_CODE_MAP = {
     "0": {
@@ -132,6 +139,15 @@ const WEATHER_CODE_MAP = {
     }
 }
 
+export function getCacheString(latitude, longitude) {
+    return `weather/lat${latitude}long${longitude}.json`;
+}
+
+export async function fetchNewData(latitude, longitude) {
+    const apiQueryString = formatAPIQueryString(latitude, longitude);
+    return await fetchNewDataFromQueryString(apiQueryString);
+}
+
 function formatAPIQueryString(latitude, longitude) {
     let queryString = `latitude=${latitude}&longitude=${longitude}`;
 
@@ -147,7 +163,7 @@ function formatAPIQueryString(latitude, longitude) {
     return queryString;
 }
 
-async function fetchNewData(queryString) {
+async function fetchNewDataFromQueryString(queryString) {
     console.log(`Fetching new weather data with query string: ${queryString}`);
     const fetchUrl = API_URL + "?" + queryString;
 
@@ -249,9 +265,8 @@ export async function getData(params) {
     console.log("Getting weather data...");
 
     const dataCachePath = `weather/lat${params.latitude}long${params.longitude}.json`;
-    const data = await utils.handleCachedData(dataCachePath, MILLISECONDS_UNTIL_STALE, async () => {
-        const apiQueryString = formatAPIQueryString(params.latitude, params.longitude);
-        return await fetchNewData(apiQueryString);
+    const data = await utils.handleCachedData(dataCachePath, DATA_TIME_INTERVAL, async () => {
+        return fetchNewData(params.latitude, params.longitude);
     });
 
     return processData(data);
