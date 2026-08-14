@@ -20,10 +20,18 @@ Screenshot and send url to console
 
 <script>
 const screenshotbtn = document.getElementById("screenshot");
+
+const testDimensions = [
+    [528, 792], // x3
+    [800, 480]  // Seeed Studio ReTerminal E1002
+];
 screenshotbtn.addEventListener("click", async (e) => {
-    const dashboard = "test_board",
-        width = 528,
-        height = 792;
+    const dashboard = "entryway",
+        testDimension = testDimensions[1];
+
+    const width = testDimension[0],
+        height = testDimension[1];
+
     console.log(`Testing with ${dashboard} at ${width}x${height}`);
 
     const queryString = new URLSearchParams({

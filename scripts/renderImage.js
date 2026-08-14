@@ -33,7 +33,7 @@ async function createScreenshot(dashboard, viewportWidth, viewportHeight) {
 
         console.log(`Accessing page ${dashboardUrl}`);
         await page.goto(dashboardUrl, {
-            waitUntil: 'networkidle2', // TODO: this takes a long time. investigate.
+            waitUntil: 'networkidle0',
         });
 
         console.log("Taking screenshot...")

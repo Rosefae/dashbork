@@ -36,7 +36,7 @@ async function fetchNewData(stationIds) {
 
     }
     catch (error) {
-        console.error("Error fetching bixi data", error);
+        console.error("Error fetching new bixi data", error);
     }
 }
 
