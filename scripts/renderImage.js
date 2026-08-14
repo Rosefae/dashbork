@@ -44,7 +44,8 @@ async function createScreenshot(dashboard, viewportWidth, viewportHeight) {
         return {
             path: screenshotPath,
             localUrl: screenshotLocalUrl,
-            publicUrl: screenshotPublicUrl
+            publicUrl: screenshotPublicUrl,
+            filename: screenshotFilename
         };
     } catch (error) {
         console.error(error);

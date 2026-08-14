@@ -59,8 +59,9 @@ app.get('/data/stm', async (req, res) => {
     }
 });
 
-// api/setup and api/display must mimic trmnl servers
+// api/setup, api/log, and api/display must mimic trmnl servers
 // https://docs.trmnl.com/go/diy/byod-s
+// https://github.com/usetrmnl/terminus/blob/main/doc/api.adoc
 
 app.get('/api/display', async (req, res) => {
     try {
@@ -72,11 +73,21 @@ app.get('/api/display', async (req, res) => {
 
         const screenshot = await renderImage(dashboard, width, height, isGrayscale, imgFormat);
         
-        res.json({ img_url: screenshot.publicUrl });
+        res.json({
+            filename: screenshot.filename,
+            img_url: screenshot.publicUrl
+        });
     } catch (error) {
         res.status(400).json(error);
     }
+});
 
+app.get('/api/setup', async (req, res) => {
+    try {
+
+    } catch (error) {
+        res.status(400).json(error);
+    }
 });
 
 app.listen(PORT, () => {
