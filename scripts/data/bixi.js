@@ -5,27 +5,16 @@ const STATUS_URL = "https://gbfs.velobixi.com/gbfs/2-2/en/station_status.json",
     INFO_URL = "https://gbfs.velobixi.com/gbfs/2-2/en/station_information.json",
     ALERTS_URL = "https://gbfs.velobixi.com/gbfs/2-2/en/system_alerts.json";
 
-const MILLISECONDS_UNTIL_STALE = 60 * 1000; // 1 minute
+const DATA_TIME_INTERVAL = 60 * 1000; // 1 minute
 
-async function fetchNewData(stationIds) {
+export async function fetchNewData() {
     console.log("Fetching new bixi data");
 
     try {
-        const [statusResponse, infoResponse, alertsResponse] = await Promise.all([
-            fetch(STATUS_URL),
-            fetch(INFO_URL),
-            fetch(ALERTS_URL)
-        ]);
-
-        if (!statusResponse.ok || !infoResponse.ok || !alertsResponse.ok) {
-            throw new Error(`HTTP error: ${statusResponse.status}, ${infoResponse.status}, ${alertsResponse.status}`);
-        }
-
-        console.log("Bixi data received. Parsing...");
         const [statusJson, infoJson, alertsJson] = await Promise.all([
-            statusResponse.json(),
-            infoResponse.json(),
-            alertsResponse.json()
+            fetchSingleNewData(STATUS_URL),
+            fetchSingleNewData(INFO_URL),
+            fetchSingleNewData(ALERTS_URL)
         ]);
 
         return {
@@ -33,10 +22,25 @@ async function fetchNewData(stationIds) {
             info: infoJson,
             alerts: alertsJson
         }
-
     }
     catch (error) {
         console.error("Error fetching new bixi data", error);
+    }
+}
+
+async function fetchSingleNewData(dataUrl) {
+    try {
+        const response = await fetch(dataUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        const resultJson = await response.json();
+
+        return resultJson;
+    }
+    catch (error) {
+        console.error("Error fetching data", error);
     }
 }
 
@@ -87,8 +91,8 @@ export async function getData(stationIds) {
 
     console.log("Getting Bixi data...");
 
-    const data = await utils.handleCachedData("bixi.json", MILLISECONDS_UNTIL_STALE, async () => {
-        return await fetchNewData(stationIds);
+    const data = await utils.handleCachedData("bixi.json", DATA_TIME_INTERVAL, async () => {
+        return await fetchNewData();
     });
 
     return processData(stationIds, data);
