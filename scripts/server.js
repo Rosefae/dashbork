@@ -1,5 +1,6 @@
 import * as http from "node:http";
 import * as path from "node:path";
+import * as fs from "fs";
 import express from "express";
 
 import * as constants from "./constants.js";
@@ -11,7 +12,6 @@ import { getData as getWeatherData } from "./data/weather.js";
 import { getData as getBixiData } from "./data/bixi.js";
 import { getData as getStmData } from "./data/stm.js";
 
-import { renderImage } from "./renderImage.js";
 import { beginFetchAll } from "./data/_fetchall.js";
 
 const PORT = constants.PORT;
@@ -59,37 +59,6 @@ app.get('/data/stm', async (req, res) => {
     }
 });
 
-// api/setup, api/log, and api/display must mimic trmnl servers
-// https://docs.trmnl.com/go/diy/byod-s
-// https://github.com/usetrmnl/terminus/blob/main/doc/api.adoc
-
-app.get('/api/display', async (req, res) => {
-    try {
-        const dashboard = req.query.dashboard,
-            width = parseInt(req.query.width),
-            height = parseInt(req.query.height),
-            isGrayscale = req.query.isGrayscale === "true",
-            imgFormat = req.query.format || "png";
-
-        const screenshot = await renderImage(dashboard, width, height, isGrayscale, imgFormat);
-        
-        res.json({
-            filename: screenshot.filename,
-            img_url: screenshot.publicUrl
-        });
-    } catch (error) {
-        res.status(400).json(error);
-    }
-});
-
-app.get('/api/setup', async (req, res) => {
-    try {
-
-    } catch (error) {
-        res.status(400).json(error);
-    }
-});
-
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
     console.log(`Express is listening on port ${PORT}`);
 });

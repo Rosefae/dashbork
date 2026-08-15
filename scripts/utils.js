@@ -2,7 +2,6 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import * as constants from "./constants.js";
-import { errorMonitor } from "node:events";
 
 /**
  * Wait before resuming execution

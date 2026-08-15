@@ -2,7 +2,7 @@ import * as path from "node:path";
 
 export const PORT = process.env.PORT || 8080;
 export const LOCAL_BASE_URL = `http://localhost:${PORT}`;
-export const PUBLIC_BASE_URL = "fake_domain_for_now"; // tbd
+export const PUBLIC_BASE_URL = process.env.DOMAIN; // tbd
 
 export const PAGES_REL_PATH = "./pages";
 export const PAGES_ABS_PATH = path.join(process.cwd(), PAGES_REL_PATH);
