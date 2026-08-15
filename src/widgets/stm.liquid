@@ -43,22 +43,35 @@ Real-time STM bus schedule
             }
 
             function renderMetroStatus(metroData) {
-                const listEl = document.createElement("ul");
-                listEl.classList.add("widget-stm__metros");
+                const statusListEl = document.createElement("ul");
+                statusListEl.classList.add("widget-stm__metros");
 
                 let notOkayEl = null;
+                let statusItems = {};
 
-                metroData.forEach((metro)=>{
-                    const listItemEl = document.createElement("li");
-                    listItemEl.classList.add("widget-stm__metro-line");
-                    listItemEl.style.setProperty("--metro-color", "#" + metro.line.route_color);
-                    listItemEl.style.setProperty("--metro-text-color", "#" + metro.line.route_text_color);
-                    listItemEl.dataset.ok = metro.ok;
-                    listItemEl.innerHTML = `
-                        <span class="widget-stm__metro-name">${metro.line.route_color_name}</span>
+                metroData.forEach((metro) => {
+                    const routeColorName = metro.line.route_color_name;
+                    if (Object.hasOwn(statusItems, routeColorName)) {
+                        const oldIndicator = statusItems[routeColorName];
+                        if (oldIndicator.dataset.ok == metro.ok) return; // no duplicate indicator
+                        if (oldIndicator.dataset.ok) {
+                            // if old indicator is not okay but new is okay, prefer new
+                            oldIndicator.remove();
+                        }
+                    }
+
+                    const statusItemEl = document.createElement("li");
+                    statusItemEl.classList.add("widget-stm__metro-line");
+                    statusItemEl.style.setProperty("--metro-color", "#" + metro.line.route_color);
+                    statusItemEl.style.setProperty("--metro-text-color", "#" + metro.line.route_text_color);
+                    statusItemEl.dataset.ok = metro.ok;
+                    statusItemEl.dataset.line = routeColorName;
+                    statusItemEl.innerHTML = `
+                        <span class="widget-stm__metro-name">${routeColorName}</span>
                         <span class="widget-stm__metro-message">${metro.description}</span>
                     `;
-                    listEl.appendChild(listItemEl);
+                    statusListEl.appendChild(statusItemEl);
+                    statusItems[routeColorName] = statusItemEl;
                     
                     if (!metro.ok) {
                         if (!notOkayEl) {
@@ -77,7 +90,7 @@ Real-time STM bus schedule
                     }
                 });
 
-                widget.appendChild(listEl);
+                widget.appendChild(statusListEl);
                 if (notOkayEl) widget.appendChild(notOkayEl);
             }
 
