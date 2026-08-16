@@ -12,6 +12,11 @@ export const PLACES_TO_CARE_ABOUT = [
     }
 ]
 
+const WEEKDAY_NAMES = [
+    "Sunday", "Monday", "Tuesday", "Wednesday",
+    "Thursday", "Friday", "Saturday"
+];
+
 const WEATHER_CODE_MAP = {
     "0": {
         "description": "Sunny",
@@ -247,7 +252,7 @@ function getDayLabel(dateString) {
         return "Tomorrow";
     }
 
-    return weatherDate.dayOfWeek;
+    return WEEKDAY_NAMES[weatherDate.dayOfWeek % 7];
 }
 
 function getWeatherType(weatherCode, isNight = false) {

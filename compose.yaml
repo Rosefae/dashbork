@@ -1,5 +1,7 @@
 services:
   server:
+    environment:
+      - TZ=America/Toronto
     build:
       context: .
     ports:
