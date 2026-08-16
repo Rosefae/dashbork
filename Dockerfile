@@ -7,7 +7,8 @@ RUN --mount=type=cache,target=/root/.npm \
     npm install
 
 COPY . .
-RUN npm parseStmInfo
+RUN npm run parseStmInfo
+RUN npm run build
 
 EXPOSE 8080
 
