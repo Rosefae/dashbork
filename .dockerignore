@@ -1,0 +1,8 @@
+node_modules/
+cached_data/
+pages/
+renders/
+.env
+.git
+.gitignore
+README.md
