@@ -1,0 +1,59 @@
+---
+title: Entryway
+theme: entryway-600x800
+widgets:
+  time:
+    time_format: "hh:mm <span class='time-block__big-time__ampm'>PP</span>"
+    extra_classes: "time-block__big-time"
+  time2:
+    time_format: "dddd MMMM D"
+    is_subsequent_instance: true
+  bixis:
+    stations:
+    - station_id: 303
+      show_bikes: true
+    - station_id: 570
+      show_bikes: true
+    - station_id: 428
+      show_docks: true
+    - station_id: 671
+      show_docks: true
+  weather:
+    latitude: 45.46
+    longitude: -73.57
+    showCurrent: true
+    showToday: true
+  stm:
+    num_buses_to_show: 5
+    max_minutes_to_show: 120
+    time_format: "h:mm PP"
+    stop_ids:
+      - 56621
+      - 56620
+      - 56716
+      - 56584
+      - 62367
+---
+
+<main class="monochrome">
+
+    <div class="time-block">
+        {% include "time" with widgets.time %}
+
+        {% include "time" with widgets.time2 %}
+    </div>
+
+    <div class="weather-block">
+      <div class="weather-block__heading">Current Weather</div>
+        {% include "weather" with widgets.weather %}
+    </div>
+
+    <div class="stm-block">
+        {% include "stm" with widgets.stm %}
+    </div>
+
+    <div class="bixi-block">
+        {% include "bixi" with widgets.bixis %}
+    </div>
+
+</main>
